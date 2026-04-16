@@ -1,0 +1,3588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HDHive API</title>
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --panel: #ffffff;
+      --panel-soft: #f7f9fd;
+      --text: #143052;
+      --muted: #6b7a90;
+      --line: #d8e3f0;
+      --primary: #2e73ff;
+      --primary-strong: #1c57cd;
+      --primary-soft: #e9f1ff;
+      --warm: #fff5d9;
+      --danger: #d14343;
+      --success: #0f9f6e;
+      --shadow: 0 18px 42px rgba(17, 24, 39, 0.08);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(46, 115, 255, 0.1), transparent 30%),
+        radial-gradient(circle at top right, rgba(255, 204, 90, 0.22), transparent 26%),
+        linear-gradient(180deg, #fbfdff 0%, #f3f7fc 100%);
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .page {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 28px 22px 32px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #fffdf6 0%, #f9fbff 54%, #eef5ff 100%);
+      color: var(--text);
+      border-radius: 24px;
+      padding: 24px 24px 22px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 22px;
+      border: 1px solid rgba(216, 227, 240, 0.9);
+    }
+
+    .hero.collapsed {
+      padding-bottom: 18px;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: -40px -30px auto auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(255, 211, 96, 0.2);
+      filter: blur(8px);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .hero-settings {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(216, 227, 240, 0.95);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-settings.hidden {
+      display: none;
+    }
+
+    .hero-settings-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .settings-fab {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 60;
+      width: 38px;
+      height: 38px;
+      min-height: 38px;
+      padding: 0;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--primary-strong);
+      box-shadow: 0 12px 24px rgba(17, 24, 39, 0.12);
+      border: 1px solid rgba(216, 227, 240, 0.95);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-fab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 28px rgba(17, 24, 39, 0.16);
+    }
+
+    .settings-fab svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(720px, 1.2fr) minmax(340px, 0.8fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .column {
+      display: grid;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(219, 228, 240, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      padding: 18px 20px 10px;
+      border-bottom: 1px solid rgba(219, 228, 240, 0.72);
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .card-desc {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .card-body {
+      padding: 18px 20px 20px;
+    }
+
+    .settings-grid,
+    .endpoint-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .endpoint-grid.single,
+    .settings-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .field.span-2 {
+      grid-column: span 2;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .label-with-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .label-link {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary-strong);
+      text-decoration: none;
+    }
+
+    .label-link:hover {
+      text-decoration: underline;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(47, 111, 237, 0.75);
+      box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.12);
+    }
+
+    textarea {
+      min-height: 138px;
+      resize: vertical;
+      font-family: var(--mono);
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      min-height: 42px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.16s ease, opacity 0.16s ease, background-color 0.16s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+      transform: none;
+    }
+
+    button.is-loading {
+      position: relative;
+      padding-right: 40px;
+    }
+
+    button.is-loading::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      width: 14px;
+      height: 14px;
+      margin-top: -7px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.42);
+      border-top-color: rgba(255, 255, 255, 0.95);
+      animation: spin 0.72s linear infinite;
+    }
+
+    .btn-secondary.is-loading::after,
+    .btn-danger.is-loading::after {
+      border-color: rgba(20, 48, 82, 0.18);
+      border-top-color: rgba(20, 48, 82, 0.78);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #e9eef8;
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: rgba(209, 67, 67, 0.1);
+      color: var(--danger);
+    }
+
+    .section-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .section-nav a {
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary-strong);
+      background: rgba(47, 111, 237, 0.08);
+      border-radius: 999px;
+      padding: 7px 12px;
+    }
+
+    .response-stack {
+      display: grid;
+      gap: 14px;
+      position: sticky;
+      top: 20px;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eef3fb;
+      color: var(--text);
+    }
+
+    .status-chip.success {
+      background: rgba(15, 159, 110, 0.12);
+      color: var(--success);
+    }
+
+    .status-chip.error {
+      background: rgba(209, 67, 67, 0.12);
+      color: var(--danger);
+    }
+
+    .status-chip.pending {
+      background: rgba(47, 111, 237, 0.12);
+      color: var(--primary-strong);
+    }
+
+    .subsection {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel-soft);
+      overflow: hidden;
+    }
+
+    .subsection-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(219, 228, 240, 0.82);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px 16px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+      background: transparent;
+      font-family: var(--mono);
+    }
+
+    .headers-list {
+      display: grid;
+      gap: 8px;
+      padding: 14px 16px;
+    }
+
+    .header-item {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+
+    .header-key {
+      color: var(--muted);
+      min-width: 150px;
+      font-family: var(--mono);
+    }
+
+    .header-value {
+      color: var(--text);
+      font-family: var(--mono);
+      flex: 1;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .toolbar button {
+      min-height: 36px;
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 18px 20px 0;
+    }
+
+    .tab-button {
+      min-height: 40px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: #edf3fb;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .tab-button.active {
+      background: linear-gradient(135deg, #fff1bd 0%, #e8f0ff 100%);
+      color: var(--primary-strong);
+      box-shadow: inset 0 0 0 1px rgba(46, 115, 255, 0.14);
+    }
+
+    .tab-panel {
+      display: none;
+      padding: 20px;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .smart-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
+      gap: 18px;
+      align-items: stretch;
+      min-height: var(--smart-workspace-min-height, auto);
+    }
+
+    .smart-workspace.has-results {
+      min-height: auto;
+    }
+
+    .smart-column {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .smart-column-left {
+      align-self: stretch;
+      min-height: 0;
+    }
+
+    .smart-workspace.has-results .smart-column-left {
+      align-self: start;
+    }
+
+    .smart-column-right {
+      height: 100%;
+      min-height: 0;
+    }
+
+    .smart-results-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-height: var(--smart-results-panel-min-height, 280px);
+    }
+
+    .smart-workspace.has-results .smart-results-panel {
+      min-height: auto;
+    }
+
+    .smart-hero {
+      display: grid;
+      gap: 16px;
+    }
+
+    .smart-search-bar {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(140px, 0.34fr) auto auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .smart-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 0 2px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .smart-toggle input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+
+    .smart-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .smart-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .smart-panel {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 254, 0.96));
+    }
+
+    .smart-panel-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .smart-result-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .smart-panel-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .smart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 14px;
+    }
+
+    .smart-results-panel > .smart-grid.is-empty {
+      grid-template-columns: minmax(0, 1fr);
+      flex: 1;
+      min-height: 0;
+      align-content: stretch;
+    }
+
+    .smart-results-panel > .smart-grid.is-empty > .section-empty {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-style: solid;
+      border-color: rgba(46, 115, 255, 0.16);
+      background:
+        radial-gradient(circle at top right, rgba(255, 214, 102, 0.14), transparent 24%),
+        linear-gradient(180deg, rgba(242, 247, 255, 0.82), rgba(250, 252, 255, 0.98));
+      padding: 28px;
+    }
+
+    .smart-empty-state {
+      width: min(420px, 100%);
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .smart-empty-mark {
+      width: 72px;
+      height: 72px;
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(255, 241, 189, 0.96), rgba(232, 240, 255, 0.96));
+      box-shadow: inset 0 0 0 1px rgba(46, 115, 255, 0.1);
+      color: var(--primary-strong);
+    }
+
+    .smart-empty-mark svg {
+      width: 34px;
+      height: 34px;
+      display: block;
+    }
+
+    .smart-empty-title {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.4;
+      color: var(--text);
+    }
+
+    .smart-empty-text {
+      max-width: 360px;
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--muted);
+    }
+
+    .smart-pagination {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 2px;
+    }
+
+    .smart-pagination-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .smart-pagination-actions button {
+      min-height: 36px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .poster-card {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f7fafe 100%);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+      cursor: pointer;
+    }
+
+    .poster-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(28, 87, 205, 0.08);
+      border-color: rgba(46, 115, 255, 0.3);
+    }
+
+    .poster-card.active {
+      border-color: rgba(46, 115, 255, 0.48);
+      box-shadow: 0 0 0 3px rgba(46, 115, 255, 0.08);
+    }
+
+    .poster-art {
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      border-radius: 14px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, #f0f5ff 0%, #fff4d6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .poster-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .poster-title {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.45;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 40px;
+    }
+
+    .poster-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mini-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(46, 115, 255, 0.08);
+      color: var(--primary-strong);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .poster-overview {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 76px;
+    }
+
+    .smart-section {
+      display: grid;
+      gap: 14px;
+    }
+
+    .smart-result-panel > .smart-section:first-child {
+      flex: 0 0 auto;
+    }
+
+    .smart-result-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+    }
+
+    .smart-result-panel > .smart-section:last-child {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .smart-resource-tabs {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .smart-resource-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+
+    .smart-filter-select {
+      min-width: 128px;
+      width: auto;
+      min-height: 38px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #fff;
+    }
+
+    .smart-resource-tab {
+      min-height: 38px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #edf3fb;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .smart-resource-tab.active {
+      background: linear-gradient(135deg, #fff1bd 0%, #e8f0ff 100%);
+      color: var(--primary-strong);
+      box-shadow: inset 0 0 0 1px rgba(46, 115, 255, 0.14);
+    }
+
+    .smart-resource-tab:disabled {
+      opacity: 0.5;
+    }
+
+    .smart-resource-list-wrap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .smart-resource-list-panel {
+      display: none;
+      min-height: 0;
+      height: 100%;
+    }
+
+    .smart-resource-list-panel.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .resource-list-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 6px;
+    }
+
+    .resource-list-scroll > .section-empty {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .resource-list-scroll::-webkit-scrollbar {
+      width: 9px;
+    }
+
+    .resource-list-scroll::-webkit-scrollbar-thumb {
+      background: rgba(107, 122, 144, 0.26);
+      border-radius: 999px;
+    }
+
+    .smart-media-card {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr);
+      gap: 16px;
+      padding: 14px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fffdf8 0%, #f8fbff 100%);
+      border: 1px solid var(--line);
+    }
+
+    .smart-media-info {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .smart-media-title {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.35;
+      color: var(--text);
+    }
+
+    .smart-media-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .resource-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+
+    .resource-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+      min-height: 136px;
+      min-width: 0;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fff;
+      box-shadow: 0 8px 18px rgba(17, 24, 39, 0.04);
+    }
+
+    .resource-card.free {
+      background: linear-gradient(180deg, #fbfff8 0%, #f7fffb 100%);
+    }
+
+    .resource-card.paid {
+      background: linear-gradient(180deg, #fffdfa 0%, #fff8ef 100%);
+    }
+
+    .resource-head {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .resource-title {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.45;
+      color: var(--text);
+      flex: 1;
+      min-width: 0;
+    }
+
+    .resource-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .resource-link-box {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      padding: 12px;
+      margin-top: auto;
+      border-radius: 14px;
+      background: rgba(46, 115, 255, 0.05);
+      border: 1px dashed rgba(46, 115, 255, 0.18);
+    }
+
+    .resource-link {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      font-size: 13px;
+      color: var(--primary-strong);
+      word-break: break-all;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      text-decoration: none;
+      font-weight: 700;
+      font-family: var(--mono);
+      background: transparent;
+      border: 0;
+      padding: 0;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .resource-link:hover {
+      color: var(--primary);
+    }
+
+    .resource-card .actions {
+      margin-top: auto !important;
+    }
+
+    .smart-copy-toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 40;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(20, 48, 82, 0.95);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 14px 30px rgba(17, 24, 39, 0.18);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .smart-copy-toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-empty {
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px dashed rgba(46, 115, 255, 0.24);
+      background: rgba(46, 115, 255, 0.03);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .insight-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 247, 251, 0.95));
+      padding: 12px 14px;
+      min-height: 88px;
+    }
+
+    .insight-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .insight-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .insight-value.small {
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--mono);
+    }
+
+    .checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 2px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .checkbox input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      padding: 0;
+      accent-color: var(--primary);
+    }
+
+    .endpoint-card {
+      scroll-margin-top: 18px;
+    }
+
+    .response-body {
+      max-height: calc(100vh - 150px);
+      overflow: auto;
+      padding: 18px 20px 20px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .layout.smart-mode {
+      grid-template-columns: 1fr;
+    }
+
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .response-stack {
+        position: static;
+      }
+
+      .response-body {
+        max-height: 70vh;
+      }
+
+      .smart-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        padding: 18px 14px 24px;
+      }
+
+      .hero {
+        padding: 22px 18px;
+      }
+
+      .hero h1 {
+        font-size: 28px;
+      }
+
+      .hero-top,
+      .hero-settings-grid,
+      .smart-search-bar,
+      .smart-workspace,
+      .smart-media-card,
+      .settings-grid,
+      .endpoint-grid {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .field.span-2 {
+        grid-column: span 1;
+      }
+
+      .header-item {
+        flex-direction: column;
+      }
+
+      .header-key {
+        min-width: 0;
+      }
+
+      .insight-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tabs {
+        padding: 16px 16px 0;
+      }
+
+      .tab-panel {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="settings-fab" id="settings-fab" type="button" aria-label="切换设置面板" title="切换设置面板">
+    <svg viewBox="0 0 50 50" aria-hidden="true" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 22.205078 2 A 1.0001 1.0001 0 0 0 21.21875 2.8378906 L 20.246094 8.7929688 C 19.076509 9.1331971 17.961243 9.5922728 16.910156 10.164062 L 11.996094 6.6542969 A 1.0001 1.0001 0 0 0 10.708984 6.7597656 L 6.8183594 10.646484 A 1.0001 1.0001 0 0 0 6.7070312 11.927734 L 10.164062 16.873047 C 9.583454 17.930271 9.1142098 19.051824 8.765625 20.232422 L 2.8359375 21.21875 A 1.0001 1.0001 0 0 0 2.0019531 22.205078 L 2.0019531 27.705078 A 1.0001 1.0001 0 0 0 2.8261719 28.691406 L 8.7597656 29.742188 C 9.1064607 30.920739 9.5727226 32.043065 10.154297 33.101562 L 6.6542969 37.998047 A 1.0001 1.0001 0 0 0 6.7597656 39.285156 L 10.648438 43.175781 A 1.0001 1.0001 0 0 0 11.927734 43.289062 L 16.882812 39.820312 C 17.936999 40.39548 19.054994 40.857928 20.228516 41.201172 L 21.21875 47.164062 A 1.0001 1.0001 0 0 0 22.205078 48 L 27.705078 48 A 1.0001 1.0001 0 0 0 28.691406 47.173828 L 29.751953 41.1875 C 30.920633 40.838997 32.033372 40.369697 33.082031 39.791016 L 38.070312 43.291016 A 1.0001 1.0001 0 0 0 39.351562 43.179688 L 43.240234 39.287109 A 1.0001 1.0001 0 0 0 43.34375 37.996094 L 39.787109 33.058594 C 40.355783 32.014958 40.813915 30.908875 41.154297 29.748047 L 47.171875 28.693359 A 1.0001 1.0001 0 0 0 47.998047 27.707031 L 47.998047 22.207031 A 1.0001 1.0001 0 0 0 47.160156 21.220703 L 41.152344 20.238281 C 40.80968 19.078827 40.350281 17.974723 39.78125 16.931641 L 43.289062 11.933594 A 1.0001 1.0001 0 0 0 43.177734 10.652344 L 39.287109 6.7636719 A 1.0001 1.0001 0 0 0 37.996094 6.6601562 L 33.072266 10.201172 C 32.023186 9.6248101 30.909713 9.1579916 29.738281 8.8125 L 28.691406 2.828125 A 1.0001 1.0001 0 0 0 27.705078 2 L 22.205078 2 z M 23.056641 4 L 26.865234 4 L 27.861328 9.6855469 A 1.0001 1.0001 0 0 0 28.603516 10.484375 C 30.066026 10.848832 31.439607 11.426549 32.693359 12.185547 A 1.0001 1.0001 0 0 0 33.794922 12.142578 L 38.474609 8.7792969 L 41.167969 11.472656 L 37.835938 16.220703 A 1.0001 1.0001 0 0 0 37.796875 17.310547 C 38.548366 18.561471 39.118333 19.926379 39.482422 21.380859 A 1.0001 1.0001 0 0 0 40.291016 22.125 L 45.998047 23.058594 L 45.998047 26.867188 L 40.279297 27.871094 A 1.0001 1.0001 0 0 0 39.482422 28.617188 C 39.122545 30.069817 38.552234 31.434687 37.800781 32.685547 A 1.0001 1.0001 0 0 0 37.845703 33.785156 L 41.224609 38.474609 L 38.53125 41.169922 L 33.791016 37.84375 A 1.0001 1.0001 0 0 0 32.697266 37.808594 C 31.44975 38.567585 30.074755 39.148028 28.617188 39.517578 A 1.0001 1.0001 0 0 0 27.876953 40.3125 L 26.867188 46 L 23.052734 46 L 22.111328 40.337891 A 1.0001 1.0001 0 0 0 21.365234 39.53125 C 19.90185 39.170557 18.522094 38.59371 17.259766 37.835938 A 1.0001 1.0001 0 0 0 16.171875 37.875 L 11.46875 41.169922 L 8.7734375 38.470703 L 12.097656 33.824219 A 1.0001 1.0001 0 0 0 12.138672 32.724609 C 11.372652 31.458855 10.793319 30.079213 10.427734 28.609375 A 1.0001 1.0001 0 0 0 9.6328125 27.867188 L 4.0019531 26.867188 L 4.0019531 23.052734 L 9.6289062 22.117188 A 1.0001 1.0001 0 0 0 10.435547 21.373047 C 10.804273 19.898143 11.383325 18.518729 12.146484 17.255859 A 1.0001 1.0001 0 0 0 12.111328 16.164062 L 8.8261719 11.46875 L 11.523438 8.7734375 L 16.185547 12.105469 A 1.0001 1.0001 0 0 0 17.28125 12.148438 C 18.536908 11.394293 19.919867 10.822081 21.384766 10.462891 A 1.0001 1.0001 0 0 0 22.132812 9.6523438 L 23.056641 4 z M 25 17 C 20.593567 17 17 20.593567 17 25 C 17 29.406433 20.593567 33 25 33 C 29.406433 33 33 29.406433 33 25 C 33 20.593567 29.406433 17 25 17 z M 25 19 C 28.325553 19 31 21.674447 31 25 C 31 28.325553 28.325553 31 25 31 C 21.674447 31 19 28.325553 19 25 C 19 21.674447 21.674447 19 25 19 z"/>
+    </svg>
+  </button>
+  <div class="page">
+    <section class="hero" id="hero">
+      <div class="hero-top">
+        <h1>HDHive API</h1>
+        <div class="hero-meta">
+          <span class="pill">服务地址：<strong id="base-url-pill">当前页面同源</strong></span>
+          <span class="pill">HDHive Key：<strong id="api-key-pill">未设置</strong></span>
+          <span class="pill">TMDB Key：<strong id="tmdb-key-pill">未设置</strong></span>
+        </div>
+      </div>
+      <div class="hero-settings" id="hero-settings">
+        <div class="hero-settings-grid">
+          <div class="field">
+            <label class="label-with-link" for="api-key">
+              <span>X-API-Key</span>
+              <a class="label-link" href="https://hdhive.com/manager/api-keys" target="_blank" rel="noreferrer">前往获取</a>
+            </label>
+            <input id="api-key" type="text" placeholder="可留空，使用服务端默认 HDHIVE_API_KEY">
+          </div>
+          <div class="field">
+            <label class="label-with-link" for="tmdb-api-key">
+              <span>X-TMDB-API-Key</span>
+              <a class="label-link" href="https://www.themoviedb.org/settings/api" target="_blank" rel="noreferrer">前往获取</a>
+            </label>
+            <input id="tmdb-api-key" type="text" placeholder="可留空，使用服务端默认 TMDB_API_KEY">
+          </div>
+          <div class="field">
+            <label for="server-base-url">服务端地址</label>
+            <input id="server-base-url" type="text" placeholder="留空则使用当前页面同源地址；例如 http://127.0.0.1:8890">
+          </div>
+        </div>
+        <div class="hero-actions">
+          <button class="btn-primary" id="save-settings-btn">保存设置</button>
+          <button class="btn-secondary" id="load-health-btn">查看本地健康状态</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="column">
+        <section class="card">
+          <div class="tabs">
+            <button class="tab-button active" type="button" data-tab="smart">封装搜索</button>
+            <button class="tab-button" type="button" data-tab="resource">资源接口</button>
+            <button class="tab-button" type="button" data-tab="tmdb">TMDB</button>
+            <button class="tab-button" type="button" data-tab="general">通用接口</button>
+            <button class="tab-button" type="button" data-tab="shares">分享管理</button>
+          </div>
+
+          <div class="tab-panel active" id="tab-panel-smart">
+            <div class="smart-workspace">
+              <div class="smart-column smart-column-left">
+                <div class="smart-panel" id="smart-search-controls-panel">
+                  <div class="smart-hero">
+                    <div class="smart-search-bar">
+                      <div class="field">
+                        <label for="smart-search-query">关键词</label>
+                        <input id="smart-search-query" type="text" placeholder="输入影视关键词，自动同时搜索 movie 和 tv">
+                      </div>
+                      <div class="field">
+                        <label for="smart-search-language">语言</label>
+                        <select id="smart-search-language"></select>
+                      </div>
+                      <label class="smart-toggle">
+                        <input id="smart-allow-points" type="checkbox">
+                        <span>显示收费资源</span>
+                      </label>
+                      <div class="field">
+                        <button class="btn-primary" id="smart-search-btn" type="button">搜索</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="smart-panel smart-results-panel" id="smart-results-panel">
+                  <div class="smart-panel-header">
+                    <div>
+                      <h3 class="card-title">搜索结果</h3>
+                      <p class="card-desc" id="smart-results-meta">输入关键词后，将以海报列表展示 TMDB 搜索结果。</p>
+                    </div>
+                    <div class="smart-panel-right" id="smart-results-pagination">
+                      <span class="smart-chip" id="smart-pagination-meta">尚未搜索</span>
+                      <div class="smart-pagination-actions">
+                        <button class="btn-secondary" id="smart-prev-page-btn" type="button">上一页</button>
+                        <button class="btn-secondary" id="smart-next-page-btn" type="button">下一页</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="smart-results-grid" class="smart-grid"></div>
+                </div>
+              </div>
+
+              <div class="smart-column smart-column-right">
+                <div class="smart-panel smart-result-panel">
+                  <div class="smart-section">
+                    <div>
+                      <div class="smart-result-heading">
+                        <h3 class="card-title">资源解锁结果</h3>
+                        <button class="btn-secondary" id="smart-export-btn" type="button">导出</button>
+                      </div>
+                      <p class="card-desc" id="smart-selection-meta">点击某个搜索结果后，会自动加载并处理对应的 HDHive 资源。</p>
+                    </div>
+                    <div class="smart-summary" id="smart-progress-summary"></div>
+                    <div id="smart-selected-media"></div>
+                  </div>
+
+                  <div class="smart-section">
+                    <div class="smart-panel-header">
+                      <div class="smart-resource-tabs">
+                        <button class="smart-resource-tab active" type="button" data-smart-resource-tab="free" id="smart-resource-tab-free">免费 <span id="smart-free-count">0</span></button>
+                        <button class="smart-resource-tab" type="button" data-smart-resource-tab="paid" id="smart-resource-tab-paid">收费 <span id="smart-paid-count">0</span></button>
+                      </div>
+                      <div class="smart-resource-controls">
+                        <select class="smart-filter-select" id="smart-pan-filter">
+                          <option value="all">全部网盘</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="smart-resource-list-wrap">
+                      <div class="smart-resource-list-panel active" id="smart-resource-panel-free">
+                        <div id="smart-unlocked-list" class="resource-list resource-list-scroll"></div>
+                      </div>
+                      <div class="smart-resource-list-panel" id="smart-resource-panel-paid">
+                        <div id="smart-paid-list" class="resource-list resource-list-scroll"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-panel-resource">
+            <div class="endpoint-card" id="endpoint-resources">
+              <h3 class="card-title">Resources</h3>
+              <p class="card-desc">根据 `type + tmdb_id` 获取资源列表。返回里可直接看到 `unlock_points`、`is_unlocked` 等关键信息。</p>
+              <div class="endpoint-grid">
+                <div class="field">
+                  <label for="resources-type">type</label>
+                  <select id="resources-type">
+                    <option value="movie">movie</option>
+                    <option value="tv">tv</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="resources-tmdb-id">tmdb_id</label>
+                  <input id="resources-tmdb-id" type="text" placeholder="例如 550">
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="resources">GET /api/open/resources/:type/:tmdb_id</button>
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
+
+            <div class="endpoint-card" id="endpoint-unlock">
+              <h3 class="card-title">Unlock</h3>
+              <p class="card-desc">本地保留安全开关。默认不允许扣积分；只有勾选后才会真正调用上游积分解锁。</p>
+              <div class="endpoint-grid single">
+                <div class="field span-2">
+                  <label for="unlock-slug">slug</label>
+                  <input id="unlock-slug" type="text" placeholder="资源 slug，支持带横杠或不带横杠的 UUID">
+                </div>
+                <div class="field span-2">
+                  <label class="checkbox">
+                    <input id="unlock-allow-points" type="checkbox">
+                    <span>允许扣积分解锁</span>
+                  </label>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="unlock">POST /api/open/resources/unlock</button>
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
+
+            <div class="endpoint-card" id="endpoint-check-resource">
+              <h3 class="card-title">Check Resource</h3>
+              <p class="card-desc">检查分享链接的网盘类型，并自动解析 115 / 123 的访问码。</p>
+              <div class="endpoint-grid single">
+                <div class="field span-2">
+                  <label for="check-resource-url">url</label>
+                  <textarea id="check-resource-url" placeholder="例如：https://115.com/s/abc123#xxxx 访问码:1234"></textarea>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="check-resource">POST /api/open/check/resource</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-panel-tmdb">
+            <div class="endpoint-card" id="endpoint-tmdb-search">
+              <h3 class="card-title">TMDB Search</h3>
+              <p class="card-desc">原始 TMDB 搜索接口代理。用于按关键词搜索 `movie / tv / multi`，获取 `tmdb_id`、海报路径、简介等信息。</p>
+              <div class="endpoint-grid">
+                <div class="field">
+                  <label for="tmdb-search-type">media_type</label>
+                  <select id="tmdb-search-type">
+                    <option value="movie">movie</option>
+                    <option value="tv">tv</option>
+                    <option value="multi">multi</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="tmdb-search-query">query</label>
+                  <input id="tmdb-search-query" type="text" placeholder="例如：权力的游戏 / Fight Club">
+                </div>
+                <div class="field">
+                  <label for="tmdb-search-page">page</label>
+                  <input id="tmdb-search-page" type="number" min="1" value="1">
+                </div>
+                <div class="field">
+                  <label for="tmdb-search-language">language</label>
+                  <select id="tmdb-search-language"></select>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="tmdb-search">GET /api/tmdb/search/:media_type</button>
+                <button class="btn-secondary" data-action="tmdb-primary-translations">GET /api/tmdb/configuration/primary_translations</button>
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
+
+            <div class="endpoint-card" id="endpoint-tmdb-details">
+              <h3 class="card-title">TMDB Details</h3>
+              <p class="card-desc">原始 TMDB 详情接口代理。可通过 `append_to_response=images` 取回海报和剧照信息。</p>
+              <div class="endpoint-grid">
+                <div class="field">
+                  <label for="tmdb-details-type">media_type</label>
+                  <select id="tmdb-details-type">
+                    <option value="movie">movie</option>
+                    <option value="tv">tv</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="tmdb-details-id">media_id</label>
+                  <input id="tmdb-details-id" type="text" placeholder="例如 550">
+                </div>
+                <div class="field">
+                  <label for="tmdb-details-language">language</label>
+                  <select id="tmdb-details-language"></select>
+                </div>
+                <div class="field">
+                  <label for="tmdb-details-append">append_to_response</label>
+                  <input id="tmdb-details-append" type="text" value="images" placeholder="例如 images,credits,videos">
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="tmdb-details">GET /api/tmdb/:media_type/:media_id</button>
+                <button class="btn-secondary" data-action="tmdb-configuration">GET /api/tmdb/configuration</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-panel-general">
+            <div class="endpoint-card" id="endpoint-ping">
+              <h3 class="card-title">Ping</h3>
+              <p class="card-desc">验证当前 API Key 是否有效。</p>
+              <div class="actions">
+                <button class="btn-primary" data-action="ping">GET /api/open/ping</button>
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
+
+            <div class="endpoint-card" id="endpoint-quota">
+              <h3 class="card-title">Quota</h3>
+              <p class="card-desc">查看当前 API Key 的每日配额和剩余额度。</p>
+              <div class="actions">
+                <button class="btn-primary" data-action="quota">GET /api/open/quota</button>
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
+
+            <div class="endpoint-card" id="endpoint-usage">
+              <h3 class="card-title">Usage</h3>
+              <p class="card-desc">查看某个日期区间内的调用统计。</p>
+              <div class="endpoint-grid">
+                <div class="field">
+                  <label for="usage-start">start_date</label>
+                  <input id="usage-start" type="date">
+                </div>
+                <div class="field">
+                  <label for="usage-end">end_date</label>
+                  <input id="usage-end" type="date">
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="usage">GET /api/open/usage</button>
+                <button class="btn-secondary" data-action="usage-today">GET /api/open/usage/today</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-panel-shares">
+            <div class="endpoint-card" id="endpoint-shares-list">
+              <h3 class="card-title">List Shares</h3>
+              <div class="endpoint-grid">
+                <div class="field">
+                  <label for="shares-page">page</label>
+                  <input id="shares-page" type="number" min="1" value="1">
+                </div>
+                <div class="field">
+                  <label for="shares-page-size">page_size</label>
+                  <input id="shares-page-size" type="number" min="1" max="100" value="20">
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="shares-list">GET /api/open/shares</button>
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
+
+            <div class="endpoint-card" id="endpoint-share-detail">
+              <h3 class="card-title">Share Detail</h3>
+              <div class="endpoint-grid single">
+                <div class="field span-2">
+                  <label for="share-slug">slug</label>
+                  <input id="share-slug" type="text" placeholder="资源 slug">
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="share-detail">GET /api/open/shares/:slug</button>
+                <button class="btn-danger" data-action="share-delete">DELETE /api/open/shares/:slug</button>
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
+
+            <div class="endpoint-card" id="endpoint-share-create">
+              <h3 class="card-title">Create Share</h3>
+              <p class="card-desc">直接填写文档对应的 JSON body。保留原始字段最方便调试。</p>
+              <div class="endpoint-grid single">
+                <div class="field span-2">
+                  <label for="create-share-body">request body</label>
+                  <textarea id="create-share-body"></textarea>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="share-create">POST /api/open/shares</button>
+                <button class="btn-secondary" data-fill="create-share-body" data-template="createShare">填充示例</button>
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
+
+            <div class="endpoint-card" id="endpoint-share-update">
+              <h3 class="card-title">Update Share</h3>
+              <div class="endpoint-grid">
+                <div class="field span-2">
+                  <label for="update-share-slug">slug</label>
+                  <input id="update-share-slug" type="text" placeholder="资源 slug">
+                </div>
+                <div class="field span-2">
+                  <label for="update-share-body">request body</label>
+                  <textarea id="update-share-body"></textarea>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn-primary" data-action="share-update">PATCH /api/open/shares/:slug</button>
+                <button class="btn-secondary" data-fill="update-share-body" data-template="updateShare">填充示例</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="column" id="response-column">
+        <section class="card response-stack" id="section-response">
+          <div class="card-header">
+            <h2 class="card-title">结果面板</h2>
+            <p class="card-desc">统一显示最后一次请求的状态、路径、关键响应头和完整返回体。</p>
+          </div>
+          <div class="response-body">
+            <div class="toolbar">
+              <button class="btn-secondary" id="copy-json-btn">复制 JSON</button>
+              <button class="btn-secondary" id="copy-curl-btn">复制 cURL</button>
+              <button class="btn-danger" id="clear-response-btn">清空结果</button>
+            </div>
+
+            <div class="status-row">
+              <span class="status-chip" id="status-chip">等待操作</span>
+              <span class="status-chip" id="method-chip">-</span>
+              <span class="status-chip" id="path-chip">-</span>
+            </div>
+
+            <div class="insight-grid">
+              <div class="insight-card">
+                <div class="insight-label">success / code</div>
+                <div class="insight-value" id="insight-success">-</div>
+              </div>
+              <div class="insight-card">
+                <div class="insight-label">message</div>
+                <div class="insight-value" id="insight-message">等待请求</div>
+              </div>
+              <div class="insight-card">
+                <div class="insight-label">data 概览</div>
+                <div class="insight-value small" id="insight-data">-</div>
+              </div>
+              <div class="insight-card">
+                <div class="insight-label">配额 / 耗时</div>
+                <div class="insight-value small" id="insight-quota">-</div>
+              </div>
+            </div>
+
+            <div class="subsection">
+              <div class="subsection-header">请求摘要</div>
+              <pre id="request-summary">暂无请求</pre>
+            </div>
+
+            <div class="subsection">
+              <div class="subsection-header">关键响应头</div>
+              <div id="headers-list" class="headers-list">
+                <div class="hint">暂无响应头</div>
+              </div>
+            </div>
+
+            <div class="subsection">
+              <div class="subsection-header">响应正文</div>
+              <pre id="response-body">等待请求...</pre>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <div class="smart-copy-toast" id="smart-copy-toast">链接已复制</div>
+
+  <script>
+    const FALLBACK_SERVER_BASE_URL = "http://127.0.0.1:8890";
+    const FALLBACK_TMDB_LANGUAGES = ["zh-CN", "zh-TW", "en-US", "ja-JP", "ko-KR", "fr-FR", "de-DE"];
+    const TMDB_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w200";
+    const SMART_UNLOCK_CACHE_PREFIX = "hdhive_smart_unlock_cache_v1";
+    const SMART_UNLOCK_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+    const SETTINGS_COLLAPSED_STORAGE_KEY = "hdhive_settings_collapsed";
+
+    const templates = {
+      createShare: {
+        tmdb_id: "550",
+        media_type: "movie",
+        title: "Fight Club 4K REMUX",
+        url: "https://pan.example.com/s/abc123",
+        access_code: "x1y2",
+        share_size: "58.3 GB",
+        video_resolution: ["4K"],
+        source: ["蓝光原盘/REMUX"],
+        subtitle_language: ["简中"],
+        subtitle_type: ["内封"],
+        unlock_points: 10,
+        is_anonymous: false,
+        hide_link: true
+      },
+      updateShare: {
+        title: "Fight Club 4K REMUX (更新)",
+        video_resolution: ["4K", "1080P"],
+        subtitle_language: ["简中", "繁中"]
+      }
+    };
+
+    const state = {
+      lastResponseText: "",
+      lastCurl: "",
+      pendingButton: null,
+      smartCopyToastTimer: null,
+      smartPanelSyncFrame: 0,
+      smartLayoutObserver: null,
+      smartResults: [],
+      smartSelectedMedia: null,
+      smartLoadToken: 0,
+      smartResourceSnapshot: null,
+      smartResourceTab: "free",
+      smartPanFilter: "all",
+      smartSearch: {
+        query: "",
+        language: "zh-CN",
+        page: 1,
+        totalPages: 0,
+        totalResults: 0
+      }
+    };
+
+    const dom = {
+      layout: document.querySelector(".layout"),
+      responseColumn: document.getElementById("response-column"),
+      hero: document.getElementById("hero"),
+      heroSettings: document.getElementById("hero-settings"),
+      settingsFab: document.getElementById("settings-fab"),
+      smartTabPanel: document.getElementById("tab-panel-smart"),
+      smartWorkspace: document.querySelector(".smart-workspace"),
+      smartLeftColumn: document.querySelector(".smart-column-left"),
+      smartSearchControlsPanel: document.getElementById("smart-search-controls-panel"),
+      smartSearchResultsPanel: document.getElementById("smart-results-panel"),
+      smartRightColumn: document.querySelector(".smart-column-right"),
+      smartResultPanel: document.querySelector(".smart-result-panel"),
+      apiKey: document.getElementById("api-key"),
+      tmdbAPIKey: document.getElementById("tmdb-api-key"),
+      serverBaseURL: document.getElementById("server-base-url"),
+      smartSearchQuery: document.getElementById("smart-search-query"),
+      smartSearchLanguage: document.getElementById("smart-search-language"),
+      smartAllowPoints: document.getElementById("smart-allow-points"),
+      smartSearchButton: document.getElementById("smart-search-btn"),
+      smartResultsMeta: document.getElementById("smart-results-meta"),
+      smartPaginationMeta: document.getElementById("smart-pagination-meta"),
+      smartPrevPageButton: document.getElementById("smart-prev-page-btn"),
+      smartNextPageButton: document.getElementById("smart-next-page-btn"),
+      smartExportButton: document.getElementById("smart-export-btn"),
+      smartResultsGrid: document.getElementById("smart-results-grid"),
+      smartSelectionMeta: document.getElementById("smart-selection-meta"),
+      smartProgressSummary: document.getElementById("smart-progress-summary"),
+      smartResourceTabButtons: document.querySelectorAll("[data-smart-resource-tab]"),
+      smartFreeCount: document.getElementById("smart-free-count"),
+      smartPaidCount: document.getElementById("smart-paid-count"),
+      smartPanFilter: document.getElementById("smart-pan-filter"),
+      smartResourcePanelFree: document.getElementById("smart-resource-panel-free"),
+      smartResourcePanelPaid: document.getElementById("smart-resource-panel-paid"),
+      smartSelectedMedia: document.getElementById("smart-selected-media"),
+      smartUnlockedList: document.getElementById("smart-unlocked-list"),
+      smartPaidList: document.getElementById("smart-paid-list"),
+      smartCopyToast: document.getElementById("smart-copy-toast"),
+      tmdbSearchLanguage: document.getElementById("tmdb-search-language"),
+      tmdbDetailsLanguage: document.getElementById("tmdb-details-language"),
+      baseUrlPill: document.getElementById("base-url-pill"),
+      apiKeyPill: document.getElementById("api-key-pill"),
+      tmdbKeyPill: document.getElementById("tmdb-key-pill"),
+      tabButtons: document.querySelectorAll("[data-tab]"),
+      statusChip: document.getElementById("status-chip"),
+      methodChip: document.getElementById("method-chip"),
+      pathChip: document.getElementById("path-chip"),
+      insightSuccess: document.getElementById("insight-success"),
+      insightMessage: document.getElementById("insight-message"),
+      insightData: document.getElementById("insight-data"),
+      insightQuota: document.getElementById("insight-quota"),
+      requestSummary: document.getElementById("request-summary"),
+      headersList: document.getElementById("headers-list"),
+      responseBody: document.getElementById("response-body")
+    };
+
+    function init() {
+      dom.serverBaseURL.value = localStorage.getItem("hdhive_server_base_url") || "";
+      dom.apiKey.value = localStorage.getItem("hdhive_api_key") || "";
+      dom.tmdbAPIKey.value = localStorage.getItem("hdhive_tmdb_api_key") || "";
+      syncServerBaseURL();
+      syncApiKeyPill();
+      syncTMDBKeyPill();
+      applySettingsVisibility(resolveInitialSettingsCollapsed());
+      activateTab("smart");
+      applyLanguageOptions(FALLBACK_TMDB_LANGUAGES, "zh-CN");
+      loadTMDBLanguages();
+      renderSmartSearchResults([]);
+      renderSmartPagination();
+      renderSmartProgress(null);
+      renderSmartResourceTabs({ free: 0, paid: 0 }, false);
+      renderSmartPanFilter([]);
+      renderSelectedMedia(null);
+      renderUnlockedResources([]);
+      renderPaidResources([], { visible: false });
+      updateSmartExportButtonState();
+      setupSmartPanelHeightSync();
+
+      document.getElementById("save-settings-btn").addEventListener("click", saveSettings);
+      document.getElementById("load-health-btn").addEventListener("click", () => callAction("healthz"));
+      dom.settingsFab.addEventListener("click", toggleSettingsVisibility);
+      document.getElementById("clear-response-btn").addEventListener("click", clearResponse);
+      document.getElementById("copy-json-btn").addEventListener("click", copyLastJSON);
+      document.getElementById("copy-curl-btn").addEventListener("click", copyLastCurl);
+      dom.serverBaseURL.addEventListener("blur", syncServerBaseURL);
+      dom.tabButtons.forEach((button) => {
+        button.addEventListener("click", () => activateTab(button.dataset.tab));
+      });
+      dom.smartSearchButton.addEventListener("click", () => runSmartSearch(dom.smartSearchButton));
+      dom.smartSearchQuery.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          runSmartSearch(dom.smartSearchButton);
+        }
+      });
+      dom.smartAllowPoints.addEventListener("change", handleSmartPaidToggle);
+      dom.smartPrevPageButton.addEventListener("click", () => {
+        if (state.smartSearch.page > 1) {
+          runSmartSearch(dom.smartPrevPageButton, state.smartSearch.page - 1);
+        }
+      });
+      dom.smartNextPageButton.addEventListener("click", () => {
+        if (state.smartSearch.page < state.smartSearch.totalPages) {
+          runSmartSearch(dom.smartNextPageButton, state.smartSearch.page + 1);
+        }
+      });
+      dom.smartExportButton.addEventListener("click", exportUnlockedResources);
+      dom.smartPanFilter.addEventListener("change", () => {
+        state.smartPanFilter = dom.smartPanFilter.value || "all";
+        rerenderSmartResourceLists();
+      });
+      dom.smartResourceTabButtons.forEach((button) => {
+        button.addEventListener("click", () => setSmartResourceTab(button.dataset.smartResourceTab));
+      });
+      dom.smartResultsGrid.addEventListener("click", handleSmartResultClick);
+      dom.smartUnlockedList.addEventListener("click", handleSmartCopyClick);
+      dom.smartPaidList.addEventListener("click", handleSmartCopyClick);
+      dom.smartPaidList.addEventListener("click", handleManualUnlockClick);
+      window.addEventListener("resize", scheduleSmartPanelHeightSync);
+
+      document.querySelectorAll("[data-action]").forEach((button) => {
+        button.addEventListener("click", () => callAction(button.dataset.action, button));
+      });
+
+      document.querySelectorAll("[data-fill]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const target = document.getElementById(button.dataset.fill);
+          const template = templates[button.dataset.template];
+          if (!target || !template) return;
+          target.value = JSON.stringify(template, null, 2);
+        });
+      });
+
+      document.getElementById("create-share-body").value = JSON.stringify(templates.createShare, null, 2);
+      document.getElementById("update-share-body").value = JSON.stringify(templates.updateShare, null, 2);
+    }
+
+    function activateTab(tabName) {
+      document.querySelectorAll("[data-tab]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === tabName);
+      });
+      document.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.classList.toggle("active", panel.id === `tab-panel-${tabName}`);
+      });
+      const smartMode = tabName === "smart";
+      dom.layout.classList.toggle("smart-mode", smartMode);
+      dom.responseColumn.classList.toggle("hidden", smartMode);
+      scheduleSmartPanelHeightSync();
+    }
+
+    function setupSmartPanelHeightSync() {
+      scheduleSmartPanelHeightSync();
+      if (typeof ResizeObserver === "undefined") {
+        return;
+      }
+      state.smartLayoutObserver = new ResizeObserver(() => {
+        scheduleSmartPanelHeightSync();
+      });
+      if (dom.smartLeftColumn) {
+        state.smartLayoutObserver.observe(dom.smartLeftColumn);
+      }
+    }
+
+    function scheduleSmartPanelHeightSync() {
+      if (state.smartPanelSyncFrame) {
+        cancelAnimationFrame(state.smartPanelSyncFrame);
+      }
+      state.smartPanelSyncFrame = requestAnimationFrame(() => {
+        state.smartPanelSyncFrame = 0;
+        syncSmartPanelHeight();
+      });
+    }
+
+    function syncSmartPanelHeight() {
+      if (!dom.smartResultPanel || !dom.smartLeftColumn || !dom.smartTabPanel || !dom.smartWorkspace || !dom.smartSearchControlsPanel || !dom.smartSearchResultsPanel) {
+        return;
+      }
+      const isSmartVisible = dom.smartTabPanel.classList.contains("active");
+      const isSingleColumn = window.innerWidth <= 1180;
+      const workspaceTop = Math.ceil(dom.smartWorkspace.getBoundingClientRect().top);
+      const viewportBottomGap = 32;
+      const viewportMinHeight = Math.max(0, window.innerHeight - workspaceTop - viewportBottomGap);
+      if (!isSmartVisible || isSingleColumn) {
+        dom.smartWorkspace.style.setProperty("--smart-workspace-min-height", "");
+        dom.smartSearchResultsPanel.style.setProperty("--smart-results-panel-min-height", "");
+        dom.smartResultPanel.style.height = "";
+        dom.smartResultPanel.style.maxHeight = "";
+        if (dom.smartRightColumn) {
+          dom.smartRightColumn.style.height = "";
+          dom.smartRightColumn.style.maxHeight = "";
+        }
+        return;
+      }
+      const hasResults = Array.isArray(state.smartResults) && state.smartResults.length > 0;
+      if (hasResults) {
+        dom.smartWorkspace.style.setProperty("--smart-workspace-min-height", "");
+        dom.smartSearchResultsPanel.style.setProperty("--smart-results-panel-min-height", "");
+      } else {
+      dom.smartWorkspace.style.setProperty("--smart-workspace-min-height", `${viewportMinHeight}px`);
+        const leftGap = parseInt(window.getComputedStyle(dom.smartLeftColumn).gap || "18", 10) || 18;
+        const controlsHeight = Math.ceil(dom.smartSearchControlsPanel.getBoundingClientRect().height);
+        const resultsPanelMinHeight = Math.max(280, viewportMinHeight - controlsHeight - leftGap);
+        dom.smartSearchResultsPanel.style.setProperty("--smart-results-panel-min-height", `${resultsPanelMinHeight}px`);
+      }
+      const leftHeight = Math.ceil(dom.smartLeftColumn.getBoundingClientRect().height);
+      if (!leftHeight) {
+        return;
+      }
+      const syncedHeight = `${leftHeight}px`;
+      dom.smartResultPanel.style.height = syncedHeight;
+      dom.smartResultPanel.style.maxHeight = syncedHeight;
+      if (dom.smartRightColumn) {
+        dom.smartRightColumn.style.height = syncedHeight;
+        dom.smartRightColumn.style.maxHeight = syncedHeight;
+      }
+    }
+
+    function saveSettings() {
+      syncServerBaseURL();
+      localStorage.setItem("hdhive_server_base_url", dom.serverBaseURL.value.trim());
+      localStorage.setItem("hdhive_api_key", dom.apiKey.value.trim());
+      localStorage.setItem("hdhive_tmdb_api_key", dom.tmdbAPIKey.value.trim());
+      syncApiKeyPill();
+      syncTMDBKeyPill();
+      loadTMDBLanguages();
+      applySettingsVisibility(true);
+      setTemporaryStatus("设置已保存", "success");
+    }
+
+    function hasSavedSettings() {
+      return Boolean(
+        localStorage.getItem("hdhive_server_base_url") ||
+        localStorage.getItem("hdhive_api_key") ||
+        localStorage.getItem("hdhive_tmdb_api_key")
+      );
+    }
+
+    function resolveInitialSettingsCollapsed() {
+      if (!hasSavedSettings()) {
+        return false;
+      }
+      return localStorage.getItem(SETTINGS_COLLAPSED_STORAGE_KEY) === "1";
+    }
+
+    function applySettingsVisibility(collapsed) {
+      dom.heroSettings.classList.toggle("hidden", collapsed);
+      dom.hero.classList.toggle("collapsed", collapsed);
+      dom.settingsFab.setAttribute("aria-pressed", collapsed ? "true" : "false");
+      dom.settingsFab.title = collapsed ? "展开设置面板" : "收起设置面板";
+      localStorage.setItem(SETTINGS_COLLAPSED_STORAGE_KEY, collapsed ? "1" : "0");
+      scheduleSmartPanelHeightSync();
+    }
+
+    function toggleSettingsVisibility() {
+      const collapsed = !dom.heroSettings.classList.contains("hidden");
+      applySettingsVisibility(collapsed);
+    }
+
+    function syncServerBaseURL() {
+      dom.serverBaseURL.value = normalizeBaseURL(dom.serverBaseURL.value);
+      dom.baseUrlPill.textContent = getServerBaseURL();
+    }
+
+    function normalizeBaseURL(value) {
+      let raw = String(value || "").trim();
+      if (!raw) {
+        return "";
+      }
+      if (!/^https?:\/\//i.test(raw)) {
+        raw = `http://${raw}`;
+      }
+      return raw.replace(/\/+$/, "");
+    }
+
+    function getServerBaseURL() {
+      const customBaseURL = normalizeBaseURL(dom.serverBaseURL.value);
+      if (customBaseURL) {
+        return customBaseURL;
+      }
+      if (window.location.origin && window.location.origin !== "null") {
+        return window.location.origin;
+      }
+      return FALLBACK_SERVER_BASE_URL;
+    }
+
+    function syncApiKeyPill() {
+      const key = dom.apiKey.value.trim();
+      dom.apiKeyPill.textContent = key ? `${key.slice(0, 8)}...` : "未设置";
+    }
+
+    function syncTMDBKeyPill() {
+      const key = dom.tmdbAPIKey.value.trim();
+      dom.tmdbKeyPill.textContent = key ? `${key.slice(0, 8)}...` : "未设置";
+    }
+
+    async function runSmartSearch(button, targetPage = 1) {
+      const query = dom.smartSearchQuery.value.trim();
+      if (!query) {
+        renderSmartSearchResults([]);
+        renderSmartPagination();
+        dom.smartResultsMeta.textContent = "请输入关键词后再搜索。";
+        return;
+      }
+
+      setPending(button, true);
+      state.smartLoadToken += 1;
+      state.smartSelectedMedia = null;
+      state.smartResourceSnapshot = null;
+      state.smartSearch.query = query;
+      state.smartSearch.language = dom.smartSearchLanguage.value.trim() || "zh-CN";
+      state.smartSearch.page = targetPage;
+      state.smartSearch.totalPages = 0;
+      state.smartSearch.totalResults = 0;
+      state.smartPanFilter = "all";
+      dom.smartResultsMeta.textContent = `正在搜索 “${query}” 第 ${targetPage} 页...`;
+      renderSmartPagination();
+      renderSelectedMedia(null);
+      renderSmartProgress(null);
+      setSmartResourceTab("free");
+      renderSmartResourceTabs({ free: 0, paid: 0 }, dom.smartAllowPoints.checked);
+      renderSmartPanFilter([]);
+      renderUnlockedResources([]);
+      renderPaidResources([], { visible: dom.smartAllowPoints.checked });
+      updateSmartExportButtonState();
+      dom.smartSelectionMeta.textContent = "请从搜索结果中选择一个具体条目。";
+
+      try {
+        const path = `/api/tmdb/search/multi?query=${encodeURIComponent(query)}&language=${encodeURIComponent(state.smartSearch.language)}&page=${encodeURIComponent(String(targetPage))}`;
+        const response = await fetchJSON(path);
+        const results = Array.isArray(response.results)
+          ? response.results.filter((item) => item && (item.media_type === "movie" || item.media_type === "tv"))
+          : [];
+        state.smartSearch.page = Number(response.page || targetPage || 1);
+        state.smartSearch.totalPages = Number(response.total_pages || 0);
+        state.smartSearch.totalResults = Number(response.total_results || results.length || 0);
+        state.smartResults = results;
+        renderSmartSearchResults(results);
+        renderSmartPagination();
+        dom.smartResultsMeta.textContent = results.length
+          ? `TMDB 共返回 ${state.smartSearch.totalResults} 条候选结果，当前第 ${state.smartSearch.page}/${Math.max(state.smartSearch.totalPages, 1)} 页，本页筛出 ${results.length} 条 movie / tv 结果。`
+          : "TMDB 当前页没有筛出匹配的 movie / tv 结果。";
+      } catch (error) {
+        state.smartResults = [];
+        state.smartSearch.totalPages = 0;
+        state.smartSearch.totalResults = 0;
+        renderSmartSearchResults([]);
+        renderSmartPagination();
+        dom.smartResultsMeta.textContent = `搜索失败：${error.message || String(error)}`;
+      } finally {
+        setPending(button, false);
+      }
+    }
+
+    function renderSmartPagination() {
+      const { page, totalPages, totalResults } = state.smartSearch;
+      if (!totalPages) {
+        dom.smartPaginationMeta.textContent = "尚未搜索";
+        dom.smartPrevPageButton.disabled = true;
+        dom.smartNextPageButton.disabled = true;
+        return;
+      }
+
+      dom.smartPaginationMeta.textContent = `第 ${page}/${totalPages} 页 · 共 ${totalResults} 条`;
+      dom.smartPrevPageButton.disabled = page <= 1;
+      dom.smartNextPageButton.disabled = page >= totalPages;
+    }
+
+    function renderSmartSearchResults(results) {
+      if (!results || results.length === 0) {
+        dom.smartWorkspace.classList.remove("has-results");
+        dom.smartResultsGrid.classList.add("is-empty");
+        dom.smartResultsGrid.innerHTML = `
+          <div class="section-empty">
+            <div class="smart-empty-state">
+              <div class="smart-empty-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M16.2 16.2L20 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="smart-empty-title">搜索结果会显示在这里</div>
+              <div class="smart-empty-text">输入关键词后，将自动搜索 TMDB 的 movie 和 tv 结果，并以海报列表形式展示。点击任意条目后，右侧会继续处理对应的 HDHive 资源。</div>
+            </div>
+          </div>
+        `;
+        scheduleSmartPanelHeightSync();
+        return;
+      }
+
+      dom.smartWorkspace.classList.add("has-results");
+      dom.smartResultsGrid.classList.remove("is-empty");
+      dom.smartResultsGrid.innerHTML = results.map((item, index) => {
+        const title = escapeHTML(getSmartMediaTitle(item));
+        const year = escapeHTML(getSmartMediaYear(item));
+        const type = escapeHTML(item.media_type || "-");
+        const poster = getPosterURL(item.poster_path);
+        const overview = escapeHTML(item.overview || "暂无简介");
+        const active = state.smartSelectedMedia && state.smartSelectedMedia.id === item.id && state.smartSelectedMedia.media_type === item.media_type;
+        return `
+          <button class="poster-card ${active ? "active" : ""}" type="button" data-smart-index="${index}">
+            <div class="poster-art">
+              ${poster ? `<img src="${escapeHTML(poster)}" alt="${title}" loading="lazy">` : '<span>NO POSTER</span>'}
+            </div>
+            <div class="poster-title">${title}</div>
+            <div class="poster-meta">
+              <span class="mini-chip">${type}</span>
+              <span class="mini-chip">${year || "未知年份"}</span>
+              <span class="mini-chip">TMDB ${escapeHTML(String(item.id || "-"))}</span>
+            </div>
+            <div class="poster-overview">${overview}</div>
+          </button>
+        `;
+      }).join("");
+      scheduleSmartPanelHeightSync();
+    }
+
+    function handleSmartResultClick(event) {
+      const button = event.target.closest("[data-smart-index]");
+      if (!button) return;
+      const index = Number(button.dataset.smartIndex);
+      const media = state.smartResults[index];
+      if (!media) return;
+      state.smartSelectedMedia = media;
+      renderSmartSearchResults(state.smartResults);
+      loadSmartResources(media);
+    }
+
+    async function loadSmartResources(media) {
+      const loadToken = ++state.smartLoadToken;
+      const showPaid = dom.smartAllowPoints.checked;
+      state.smartResourceSnapshot = null;
+      state.smartPanFilter = "all";
+      let skippedInvalidCount = 0;
+      const baseProgress = {
+        stage: "正在获取资源列表",
+        total: 0,
+        detailDone: 0,
+        free: 0,
+        paid: 0,
+        unlockDone: 0,
+        unlockTotal: 0
+      };
+
+      renderSelectedMedia(media, { loading: true, progress: baseProgress });
+      renderSmartProgress(baseProgress);
+      setSmartResourceTab("free");
+      renderSmartResourceTabs({ free: 0, paid: 0 }, showPaid);
+      renderSmartPanFilter([]);
+      renderUnlockedResources([]);
+      renderPaidResources([], { visible: showPaid });
+      updateSmartExportButtonState();
+      dom.smartSelectionMeta.textContent = `正在读取 ${getSmartMediaTitle(media)} 的 HDHive 资源...`;
+
+      try {
+        const resourcesResponse = await fetchJSON(`/api/open/resources/${encodeURIComponent(media.media_type)}/${encodeURIComponent(String(media.id))}`);
+        const resources = Array.isArray(resourcesResponse.data) ? resourcesResponse.data : [];
+        const filteredResources = resources.filter((resource) => !isInvalidResourceCandidate(resource));
+        skippedInvalidCount = resources.length - filteredResources.length;
+        if (!isCurrentSmartLoad(loadToken)) return;
+
+        if (filteredResources.length === 0) {
+          const emptyProgress = {
+            stage: "当前无资源",
+            total: 0,
+            detailDone: 0,
+            free: 0,
+            paid: 0,
+            unlockDone: 0,
+            unlockTotal: 0
+          };
+          renderSelectedMedia(media, { loading: false, progress: emptyProgress });
+          renderSmartProgress(emptyProgress);
+          renderSmartResourceTabs({ free: 0, paid: 0 }, showPaid);
+          renderSmartPanFilter([]);
+          renderUnlockedResources([]);
+          renderPaidResources([], { visible: showPaid });
+          updateSmartExportButtonState();
+          dom.smartSelectionMeta.textContent = skippedInvalidCount > 0
+            ? `该条目当前没有可用资源，已忽略 ${skippedInvalidCount} 个失效链接。`
+            : "该条目当前没有可用资源。";
+          return;
+        }
+
+        let detailFreeCount = 0;
+        let detailPaidCount = 0;
+        let progress = {
+          stage: "正在分析资源详情",
+          total: filteredResources.length,
+          detailDone: 0,
+          free: 0,
+          paid: 0,
+          unlockDone: 0,
+          unlockTotal: 0
+        };
+        renderSelectedMedia(media, { loading: true, progress });
+        renderSmartProgress(progress);
+        dom.smartSelectionMeta.textContent = buildSmartStatusMessage({
+          total: filteredResources.length,
+          skippedInvalid: skippedInvalidCount,
+          phase: `正在读取资源详情 0/${filteredResources.length} ...`
+        });
+
+        const enrichedResources = await mapWithConcurrency(filteredResources, 4, async (resource) => {
+          try {
+            const detail = await fetchJSON(`/api/open/shares/${encodeURIComponent(resource.slug)}`);
+            const detailData = detail.data || null;
+            const isPaid = isPaidResource(detailData, resource);
+            return {
+              resource,
+              detail: detailData,
+              isPaid
+            };
+          } catch (_) {
+            const isPaid = isPaidResource(null, resource);
+            return {
+              resource,
+              detail: null,
+              isPaid
+            };
+          }
+        }, (item, _, completed) => {
+          if (!isCurrentSmartLoad(loadToken)) return;
+          if (!item.isPaid) {
+            detailFreeCount += 1;
+          } else {
+            detailPaidCount += 1;
+          }
+          progress = {
+            ...progress,
+            detailDone: completed,
+            free: detailFreeCount,
+            paid: detailPaidCount
+          };
+          renderSelectedMedia(media, { loading: true, progress });
+          renderSmartProgress(progress);
+          dom.smartSelectionMeta.textContent = buildSmartStatusMessage({
+            total: filteredResources.length,
+            skippedInvalid: skippedInvalidCount,
+            phase: `正在读取资源详情 ${completed}/${filteredResources.length} ...`
+          });
+        });
+        if (!isCurrentSmartLoad(loadToken)) return;
+
+        const freeResources = enrichedResources.filter((item) => !item.isPaid);
+        const paidResources = enrichedResources.filter((item) => item.isPaid).map((item) => {
+          const cachedUnlock = getCachedUnlockResult(item.resource.slug);
+          return {
+            ...item,
+            originalPoints: getResourcePoints(item.detail, item.resource),
+            manualUnlock: cachedUnlock?.data || null,
+            manualUnlockMessage: cachedUnlock ? (cachedUnlock.message || "已从缓存读取") : "",
+            manualUnlockError: ""
+          };
+        });
+        progress = {
+          stage: freeResources.length > 0 ? "正在自动处理可直接获取的链接" : "资源分析完成",
+          total: filteredResources.length,
+          detailDone: filteredResources.length,
+          free: freeResources.length,
+          paid: paidResources.length,
+          unlockDone: 0,
+          unlockTotal: freeResources.length
+        };
+        renderSelectedMedia(media, { loading: true, progress });
+        renderSmartProgress(progress);
+        renderSmartPanFilter([...freeResources, ...paidResources]);
+        state.smartResourceSnapshot = {
+          mediaKey: getSmartMediaKey(media),
+          total: filteredResources.length,
+          free: freeResources.length,
+          paid: paidResources.length,
+          skippedInvalid: skippedInvalidCount,
+          unlockedResources: [],
+          paidResources
+        };
+        rerenderSmartResourceLists();
+        dom.smartSelectionMeta.textContent = freeResources.length > 0
+          ? buildSmartStatusMessage({
+              total: filteredResources.length,
+              skippedInvalid: skippedInvalidCount,
+              phase: `可直接获取 ${freeResources.length} 个，收费 ${paidResources.length} 个，正在自动处理 0/${freeResources.length} ...`
+            })
+          : buildSmartFinalSelectionMessage({
+              total: filteredResources.length,
+              free: 0,
+              paid: paidResources.length,
+              skippedInvalid: skippedInvalidCount
+            }, showPaid);
+
+        if (freeResources.length === 0) {
+          const noFreeSnapshot = {
+            mediaKey: getSmartMediaKey(media),
+            total: filteredResources.length,
+            free: 0,
+            paid: paidResources.length,
+            skippedInvalid: skippedInvalidCount,
+            unlockedResources: [],
+            paidResources
+          };
+          state.smartResourceSnapshot = noFreeSnapshot;
+          renderSelectedMedia(media, { loading: false, progress: { ...progress, stage: "处理完成" } });
+          renderSmartProgress({ ...progress, stage: "处理完成" });
+          renderSmartPanFilter(paidResources);
+          rerenderSmartResourceLists();
+          updateSmartExportButtonState();
+          if (showPaid && paidResources.length > 0) {
+            setSmartResourceTab("paid");
+          }
+          return;
+        }
+
+        const unlockedResources = new Array(freeResources.length);
+        await mapWithConcurrency(freeResources, 3, async (item) => {
+          const cachedUnlock = getCachedUnlockResult(item.resource.slug);
+          if (cachedUnlock) {
+            return {
+              resource: item.resource,
+              detail: item.detail,
+              unlock: cachedUnlock.data || null,
+              unlockMessage: cachedUnlock.message || "已从缓存读取",
+              unlockError: "",
+              fromCache: true
+            };
+          }
+          try {
+            const unlocked = await fetchJSON("/api/open/resources/unlock", {
+              method: "POST",
+              body: {
+                slug: item.resource.slug,
+                allow_points: false
+              }
+            });
+            return {
+              resource: item.resource,
+              detail: item.detail,
+              unlock: unlocked.data || null,
+              unlockMessage: unlocked.message || "解锁成功",
+              unlockError: "",
+              fromCache: false
+            };
+          } catch (error) {
+            return {
+              resource: item.resource,
+              detail: item.detail,
+              unlock: null,
+              unlockMessage: "",
+              unlockError: error.message || String(error),
+              fromCache: false
+            };
+          }
+        }, (item, index, completed) => {
+          if (!isCurrentSmartLoad(loadToken)) return;
+          if (!item.unlockError && item.unlock) {
+            persistCachedUnlockResult(item.resource.slug, {
+              data: item.unlock,
+              message: item.unlockMessage || ""
+            });
+          }
+          unlockedResources[index] = item;
+          progress = {
+            ...progress,
+            unlockDone: completed
+          };
+          const currentUnlocked = unlockedResources.filter(Boolean);
+          state.smartResourceSnapshot = {
+            mediaKey: getSmartMediaKey(media),
+            total: filteredResources.length,
+            free: freeResources.length,
+            paid: paidResources.length,
+            skippedInvalid: skippedInvalidCount,
+            unlockedResources: currentUnlocked,
+            paidResources
+          };
+          renderSelectedMedia(media, { loading: true, progress });
+          renderSmartProgress(progress);
+          renderSmartPanFilter([...currentUnlocked, ...paidResources]);
+          rerenderSmartResourceLists();
+          dom.smartSelectionMeta.textContent = buildSmartStatusMessage({
+            total: filteredResources.length,
+            skippedInvalid: skippedInvalidCount,
+            phase: `已自动解锁 ${completed}/${freeResources.length} 个可直接获取的链接，收费资源 ${showPaid ? "已显示在下方" : "当前已隐藏"}。`
+          });
+        });
+        if (!isCurrentSmartLoad(loadToken)) return;
+
+        const finalUnlockedResources = unlockedResources.filter(Boolean);
+        const finalProgress = {
+          ...progress,
+          stage: "处理完成",
+          unlockDone: freeResources.length
+        };
+        const snapshot = {
+          mediaKey: getSmartMediaKey(media),
+          total: filteredResources.length,
+          free: freeResources.length,
+          paid: paidResources.length,
+          skippedInvalid: skippedInvalidCount,
+          unlockedResources: finalUnlockedResources,
+          paidResources
+        };
+        state.smartResourceSnapshot = snapshot;
+
+        renderSelectedMedia(media, { loading: false, progress: finalProgress });
+        renderSmartProgress(finalProgress);
+        renderSmartPanFilter([...finalUnlockedResources, ...paidResources]);
+        rerenderSmartResourceLists();
+        updateSmartExportButtonState();
+        dom.smartSelectionMeta.textContent = buildSmartFinalSelectionMessage(snapshot, showPaid);
+      } catch (error) {
+        if (!isCurrentSmartLoad(loadToken)) return;
+        renderSelectedMedia(media, { loading: false });
+        renderSmartProgress(null);
+        renderSmartResourceTabs({ free: 0, paid: 0 }, showPaid);
+        renderSmartPanFilter([]);
+        renderUnlockedResources([]);
+        renderPaidResources([], { visible: showPaid });
+        updateSmartExportButtonState();
+        dom.smartSelectionMeta.textContent = `加载资源失败：${error.message || String(error)}`;
+      }
+    }
+
+    function isCurrentSmartLoad(token) {
+      return token === state.smartLoadToken;
+    }
+
+    function getUnlockCacheStorageKey(slug) {
+      const normalizedSlug = String(slug || "").trim();
+      const baseURL = getServerBaseURL();
+      const apiKey = dom.apiKey.value.trim() || "__server_default__";
+      return `${SMART_UNLOCK_CACHE_PREFIX}:${baseURL}:${apiKey}:${normalizedSlug}`;
+    }
+
+    function getCachedUnlockResult(slug) {
+      const storageKey = getUnlockCacheStorageKey(slug);
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) {
+          return null;
+        }
+        const parsed = JSON.parse(raw);
+        const cachedAt = Number(parsed.cached_at || 0);
+        if (!cachedAt || Date.now() - cachedAt > SMART_UNLOCK_CACHE_TTL_MS) {
+          localStorage.removeItem(storageKey);
+          return null;
+        }
+        if (!parsed.data) {
+          return null;
+        }
+        return parsed;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function persistCachedUnlockResult(slug, payload) {
+      const storageKey = getUnlockCacheStorageKey(slug);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify({
+          cached_at: Date.now(),
+          data: payload?.data || null,
+          message: payload?.message || ""
+        }));
+      } catch (_) {
+      }
+    }
+
+    function isInvalidResourceCandidate(resource) {
+      if (!resource || String(resource.validate_status || "").toLowerCase() !== "invalid") {
+        return false;
+      }
+      const message = String(resource.validate_message || "");
+      return message.includes("链接无效") || message.includes("链接已失效");
+    }
+
+    function buildSmartStatusMessage(summary) {
+      const total = Number(summary?.total || 0);
+      const skippedInvalid = Number(summary?.skippedInvalid || 0);
+      const phase = String(summary?.phase || "").trim();
+      const parts = [];
+      if (total > 0) {
+        parts.push(`共 ${total} 个有效资源`);
+      }
+      if (skippedInvalid > 0) {
+        parts.push(`已忽略 ${skippedInvalid} 个失效链接`);
+      }
+      if (phase) {
+        parts.push(phase);
+      }
+      return parts.join("，");
+    }
+
+    function getResourcePoints(detail, resource) {
+      const raw = detail?.actual_unlock_points ?? detail?.unlock_points ?? resource?.unlock_points;
+      if (raw === null || raw === undefined || raw === "") {
+        return 0;
+      }
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function isPaidResource(detail, resource) {
+      if (detail?.is_free_for_user) {
+        return false;
+      }
+      return getResourcePoints(detail, resource) > 0;
+    }
+
+    function getResourceAccessURL(item) {
+      if (!item) return "";
+      if (item.manualUnlock?.full_url) return item.manualUnlock.full_url;
+      if (item.manualUnlock?.url) return item.manualUnlock.url;
+      if (item.unlock?.full_url) return item.unlock.full_url;
+      if (item.unlock?.url) return item.unlock.url;
+      return "";
+    }
+
+    function normalizePanType(value) {
+      const raw = String(value || "").trim().toLowerCase();
+      if (!raw) {
+        return "unknown";
+      }
+      return raw;
+    }
+
+    function formatPanTypeLabel(panType) {
+      const normalized = normalizePanType(panType);
+      const mapping = {
+        quark: "夸克",
+        uc: "UC",
+        baidu: "百度",
+        alipan: "阿里",
+        "139": "移动",
+        "123": "123",
+        "115": "115",
+        "189": "天翼",
+        xunlei: "迅雷",
+        pikpak: "PikPak",
+        magnet: "磁力",
+        ed2k: "电驴",
+        unknown: "其他"
+      };
+      return mapping[normalized] || String(panType || normalized).trim() || "未知网盘";
+    }
+
+    function getResourcePanType(item) {
+      return normalizePanType(item?.resource?.pan_type || item?.detail?.pan_type || "");
+    }
+
+    function renderSmartPanFilter(items) {
+      const nextItems = Array.isArray(items) ? items : [];
+      const counts = new Map();
+      nextItems.forEach((item) => {
+        const key = getResourcePanType(item);
+        counts.set(key, (counts.get(key) || 0) + 1);
+      });
+      const options = Array.from(counts.entries()).sort((a, b) => a[0].localeCompare(b[0], "zh-CN"));
+      const currentValue = state.smartPanFilter || "all";
+      const nextValue = currentValue === "all" || counts.has(currentValue) ? currentValue : "all";
+      state.smartPanFilter = nextValue;
+      dom.smartPanFilter.innerHTML = [
+        '<option value="all">全部网盘</option>',
+        ...options.map(([key, count]) => `<option value="${escapeHTML(key)}">${escapeHTML(formatPanTypeLabel(key))} (${escapeHTML(String(count))})</option>`)
+      ].join("");
+      dom.smartPanFilter.value = nextValue;
+      dom.smartPanFilter.disabled = options.length === 0;
+    }
+
+    function filterSmartResources(items) {
+      if (!Array.isArray(items) || items.length === 0) {
+        return [];
+      }
+      const filter = state.smartPanFilter || "all";
+      if (filter === "all") {
+        return items;
+      }
+      return items.filter((item) => getResourcePanType(item) === filter);
+    }
+
+    function rerenderSmartResourceLists() {
+      const visiblePaid = dom.smartAllowPoints.checked;
+      const snapshot = state.smartResourceSnapshot;
+      if (!snapshot) {
+        renderSmartResourceTabs({ free: 0, paid: 0 }, visiblePaid);
+        renderUnlockedResources([]);
+        renderPaidResources([], { visible: visiblePaid });
+        return;
+      }
+      const freeItems = filterSmartResources(snapshot.unlockedResources || []);
+      const paidItems = filterSmartResources(snapshot.paidResources || []);
+      renderSmartResourceTabs({
+        free: freeItems.length,
+        paid: paidItems.length
+      }, visiblePaid);
+      renderUnlockedResources(freeItems);
+      renderPaidResources(visiblePaid ? paidItems : [], { visible: visiblePaid });
+    }
+
+    function hasExportableUnlockedResources() {
+      if (!state.smartResourceSnapshot) {
+        return false;
+      }
+      const freeItems = Array.isArray(state.smartResourceSnapshot.unlockedResources)
+        ? state.smartResourceSnapshot.unlockedResources.some((item) => item && !item.unlockError && getResourceAccessURL(item))
+        : false;
+      const paidItems = Array.isArray(state.smartResourceSnapshot.paidResources)
+        ? state.smartResourceSnapshot.paidResources.some((item) => item && item.manualUnlock && getResourceAccessURL(item))
+        : false;
+      return freeItems || paidItems;
+    }
+
+    function updateSmartExportButtonState() {
+      dom.smartExportButton.disabled = !hasExportableUnlockedResources();
+    }
+
+    function exportUnlockedResources() {
+      if (!state.smartSelectedMedia || !state.smartResourceSnapshot) {
+        setTemporaryStatus("暂无可导出的资源", "error");
+        return;
+      }
+
+      const freeItems = Array.isArray(state.smartResourceSnapshot.unlockedResources)
+        ? state.smartResourceSnapshot.unlockedResources
+            .filter((item) => item && !item.unlockError && getResourceAccessURL(item))
+            .map((item) => serializeExportResource(item, "free"))
+        : [];
+      const paidItems = Array.isArray(state.smartResourceSnapshot.paidResources)
+        ? state.smartResourceSnapshot.paidResources
+            .filter((item) => item && item.manualUnlock && getResourceAccessURL(item))
+            .map((item) => serializeExportResource(item, "paid"))
+        : [];
+      const resources = [...freeItems, ...paidItems];
+
+      if (resources.length === 0) {
+        setTemporaryStatus("暂无可导出的已解锁资源", "error");
+        return;
+      }
+
+      const payload = {
+        exported_at: new Date().toISOString(),
+        media: {
+          tmdb_id: state.smartSelectedMedia.id || null,
+          media_type: state.smartSelectedMedia.media_type || null,
+          title: getSmartMediaTitle(state.smartSelectedMedia),
+          year: getSmartMediaYear(state.smartSelectedMedia) || null
+        },
+        summary: {
+          total: resources.length,
+          free: freeItems.length,
+          paid: paidItems.length
+        },
+        resources
+      };
+
+      const filename = buildExportFilename(state.smartSelectedMedia);
+      downloadTextFile(filename, JSON.stringify(payload, null, 2), "application/json");
+      setTemporaryStatus(`已导出 ${resources.length} 条资源`, "success");
+    }
+
+    function serializeExportResource(item, category) {
+      return {
+        category,
+        slug: item.resource?.slug || "",
+        title: item.resource?.title || item.resource?.slug || "",
+        pan_type: getResourcePanType(item),
+        share_size: item.resource?.share_size || "",
+        unlock_points: category === "paid"
+          ? item.originalPoints ?? getResourcePoints(item.detail, item.resource)
+          : 0,
+        url: getResourceAccessURL(item),
+        access_code: item.manualUnlock?.access_code || item.unlock?.access_code || "",
+        message: item.manualUnlockMessage || item.unlockMessage || ""
+      };
+    }
+
+    function buildExportFilename(media) {
+      const safeTitle = getSmartMediaTitle(media)
+        .replace(/[\\/:*?"<>|]+/g, "_")
+        .replace(/\s+/g, "_")
+        .slice(0, 64) || "hdhive";
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      return `${safeTitle}_${media.media_type || "media"}_${media.id || "unknown"}_${timestamp}.json`;
+    }
+
+    function downloadTextFile(filename, content, mimeType) {
+      const blob = new Blob([content], { type: mimeType || "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function handleSmartPaidToggle() {
+      const visible = dom.smartAllowPoints.checked;
+      if (state.smartResourceSnapshot && state.smartSelectedMedia && state.smartResourceSnapshot.mediaKey === getSmartMediaKey(state.smartSelectedMedia)) {
+        rerenderSmartResourceLists();
+        updateSmartExportButtonState();
+        dom.smartSelectionMeta.textContent = buildSmartFinalSelectionMessage(state.smartResourceSnapshot, visible);
+        return;
+      }
+      if (state.smartSelectedMedia) {
+        loadSmartResources(state.smartSelectedMedia);
+      } else {
+        renderSmartResourceTabs({ free: 0, paid: 0 }, visible);
+        renderSmartPanFilter([]);
+        renderPaidResources([], { visible });
+        updateSmartExportButtonState();
+      }
+    }
+
+    function setSmartResourceTab(tabName) {
+      const visiblePaid = dom.smartAllowPoints.checked;
+      const nextTab = tabName === "paid" && !visiblePaid ? "free" : tabName;
+      state.smartResourceTab = nextTab === "paid" ? "paid" : "free";
+      dom.smartResourceTabButtons.forEach((button) => {
+        const isActive = button.dataset.smartResourceTab === state.smartResourceTab;
+        button.classList.toggle("active", isActive);
+      });
+      dom.smartResourcePanelFree.classList.toggle("active", state.smartResourceTab === "free");
+      dom.smartResourcePanelPaid.classList.toggle("active", state.smartResourceTab === "paid");
+    }
+
+    function renderSmartResourceTabs(counts, visiblePaid) {
+      const freeCount = Number(counts.free || 0);
+      const paidCount = Number(counts.paid || 0);
+      dom.smartFreeCount.textContent = String(freeCount);
+      dom.smartPaidCount.textContent = String(paidCount);
+      const paidButton = document.getElementById("smart-resource-tab-paid");
+      paidButton.disabled = !visiblePaid;
+      if (!visiblePaid && state.smartResourceTab === "paid") {
+        state.smartResourceTab = "free";
+      }
+      if (visiblePaid && paidCount > 0 && freeCount === 0 && state.smartResourceTab !== "paid") {
+        state.smartResourceTab = "paid";
+      }
+      setSmartResourceTab(state.smartResourceTab);
+    }
+
+    function renderSmartProgress(progress) {
+      if (!progress) {
+        dom.smartProgressSummary.innerHTML = '<span class="smart-chip">待选择资源</span>';
+        return;
+      }
+      dom.smartProgressSummary.innerHTML = buildSmartProgressChips(progress);
+    }
+
+    function buildSmartProgressChips(progress) {
+      const total = Number(progress.total || 0);
+      const detailDone = Number(progress.detailDone || 0);
+      const unlockDone = Number(progress.unlockDone || 0);
+      const unlockTotal = Number(progress.unlockTotal || 0);
+      const free = Number(progress.free || 0);
+      const paid = Number(progress.paid || 0);
+      const stage = String(progress.stage || "");
+      const chips = [];
+
+      if (total <= 0) {
+        return '<span class="smart-chip">当前无资源</span>';
+      }
+
+      chips.push(`<span class="smart-chip">共 ${escapeHTML(String(total))} 个资源</span>`);
+
+      const isCompleted = stage === "处理完成";
+      const isDetailing = detailDone > 0 && detailDone < total;
+      const isUnlocking = unlockTotal > 0 && unlockDone < unlockTotal;
+
+      if (isDetailing) {
+        chips.push(`<span class="smart-chip">正在分析 ${escapeHTML(String(detailDone))}/${escapeHTML(String(total))}</span>`);
+      } else if (isUnlocking) {
+        chips.push(`<span class="smart-chip">正在解锁 ${escapeHTML(String(unlockDone))}/${escapeHTML(String(unlockTotal))}</span>`);
+      } else if (isCompleted && free > 0) {
+        chips.push(`<span class="smart-chip">已解锁 ${escapeHTML(String(unlockDone || free))}</span>`);
+      }
+
+      if (paid > 0) {
+        chips.push(`<span class="smart-chip">收费 ${escapeHTML(String(paid))}</span>`);
+      } else if (free > 0 && !isCompleted) {
+        chips.push(`<span class="smart-chip">免费 ${escapeHTML(String(free))}</span>`);
+      }
+
+      return chips.join("");
+    }
+
+    function renderSelectedMedia(media, options = {}) {
+      if (!media) {
+        dom.smartSelectedMedia.innerHTML = '<div class="section-empty">选中某个搜索结果后，这里会显示媒体信息、资源统计和解锁进度。</div>';
+        return;
+      }
+
+      const { loading = false, progress = null } = options;
+      const poster = getPosterURL(media.poster_path);
+      const title = escapeHTML(getSmartMediaTitle(media));
+      const overview = escapeHTML(media.overview || "暂无简介");
+      const year = escapeHTML(getSmartMediaYear(media));
+      dom.smartSelectedMedia.innerHTML = `
+        <div class="smart-media-card">
+          <div class="poster-art">
+            ${poster ? `<img src="${escapeHTML(poster)}" alt="${title}" loading="lazy">` : '<span>NO POSTER</span>'}
+          </div>
+          <div class="smart-media-info">
+            <div class="smart-media-title">${title}</div>
+            <div class="poster-meta">
+              <span class="mini-chip">${escapeHTML(media.media_type || "-")}</span>
+              <span class="mini-chip">${year || "未知年份"}</span>
+              <span class="mini-chip">TMDB ${escapeHTML(String(media.id || "-"))}</span>
+              ${loading ? '<span class="mini-chip">处理中</span>' : ''}
+            </div>
+            <div class="smart-media-desc">${overview}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderUnlockedResources(items) {
+      if (!items || items.length === 0) {
+        dom.smartUnlockedList.innerHTML = '<div class="section-empty">当前还没有自动解锁完成的资源。</div>';
+        return;
+      }
+
+      dom.smartUnlockedList.innerHTML = items.map((item) => {
+        const title = escapeHTML(item.resource.title || item.resource.slug || "未命名资源");
+        const size = item.resource.share_size ? `<span class="mini-chip">${escapeHTML(item.resource.share_size)}</span>` : "";
+        const panType = `<span class="mini-chip">${escapeHTML(formatPanTypeLabel(getResourcePanType(item)))}</span>`;
+        const message = item.unlockError
+          ? `<div class="resource-note">自动解锁失败：${escapeHTML(item.unlockError)}</div>`
+          : "";
+        const resolvedURL = item.unlock && item.unlock.full_url
+          ? item.unlock.full_url
+          : item.unlock && item.unlock.url
+            ? item.unlock.url
+            : "";
+        const link = resolvedURL
+          ? `
+            <div class="resource-link-box">
+              <button class="resource-link" type="button" data-copy-link="${escapeHTML(resolvedURL)}">${escapeHTML(resolvedURL)}</button>
+            </div>
+          `
+          : '<div class="resource-note">未返回可直接访问的链接</div>';
+        return `
+          <div class="resource-card free">
+            <div class="resource-head">
+              <div class="resource-title">${title}</div>
+              <div class="poster-meta">
+                ${panType}
+                ${size}
+              </div>
+            </div>
+            ${message}
+            ${link}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderPaidResources(items, options = {}) {
+      const { visible = dom.smartAllowPoints.checked } = options;
+      if (!items || items.length === 0) {
+        dom.smartPaidList.innerHTML = visible
+          ? '<div class="section-empty">当前没有需要手动处理的收费资源。</div>'
+          : '<div class="section-empty">“显示收费资源”关闭时，收费资源会被隐藏。</div>';
+        return;
+      }
+
+      dom.smartPaidList.innerHTML = items.map((item) => {
+        const detail = item.detail || {};
+        const title = escapeHTML(item.resource.title || item.resource.slug || "未命名资源");
+        const points = item.originalPoints ?? getResourcePoints(detail, item.resource) ?? "-";
+        const panType = formatPanTypeLabel(getResourcePanType(item));
+        const message = item.manualUnlockError
+          ? `手动解锁失败：${escapeHTML(item.manualUnlockError)}`
+          : item.manualUnlock
+            ? escapeHTML(item.manualUnlockMessage || "已手动解锁")
+            : escapeHTML(detail.unlock_message || "需要手动解锁");
+        const resolvedURL = getResourceAccessURL(item);
+        const link = resolvedURL
+          ? `
+            <div class="resource-link-box">
+              <button class="resource-link" type="button" data-copy-link="${escapeHTML(resolvedURL)}">${escapeHTML(resolvedURL)}</button>
+            </div>
+          `
+          : "";
+        const action = item.manualUnlock
+          ? '<div class="resource-note">已解锁，可直接点击上方链接复制。</div>'
+          : `
+            <div class="actions" style="margin-top:0;">
+              <button class="btn-primary" type="button" data-manual-unlock="${escapeHTML(item.resource.slug)}">手动解锁</button>
+            </div>
+          `;
+        return `
+          <div class="resource-card paid">
+            <div class="resource-head">
+              <div class="resource-title">${title}</div>
+              <div class="poster-meta">
+                <span class="mini-chip">${escapeHTML(panType)}</span>
+                <span class="mini-chip">${escapeHTML(String(points))} 积分</span>
+              </div>
+            </div>
+            <div class="resource-note">${message}</div>
+            ${link}
+            ${action}
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function handleSmartCopyClick(event) {
+      const button = event.target.closest("[data-copy-link]");
+      if (!button) return;
+      const link = button.dataset.copyLink;
+      if (!link) return;
+      try {
+        await copyText(link, "链接已复制", { silentStatus: true });
+        showSmartCopyToast("链接已复制");
+      } catch (_) {
+        showSmartCopyToast("复制失败");
+      }
+    }
+
+    function showSmartCopyToast(message) {
+      dom.smartCopyToast.textContent = message;
+      dom.smartCopyToast.classList.add("visible");
+      if (state.smartCopyToastTimer) {
+        clearTimeout(state.smartCopyToastTimer);
+      }
+      state.smartCopyToastTimer = setTimeout(() => {
+        dom.smartCopyToast.classList.remove("visible");
+        state.smartCopyToastTimer = null;
+      }, 1600);
+    }
+
+    async function handleManualUnlockClick(event) {
+      const button = event.target.closest("[data-manual-unlock]");
+      if (!button || !state.smartSelectedMedia) return;
+      const slug = button.dataset.manualUnlock;
+      if (!slug) return;
+      const snapshot = state.smartResourceSnapshot;
+      if (!snapshot || !Array.isArray(snapshot.paidResources)) return;
+      const targetItem = snapshot.paidResources.find((item) => item.resource && item.resource.slug === slug);
+      if (!targetItem) return;
+      const cachedUnlock = getCachedUnlockResult(slug);
+      if (cachedUnlock) {
+        targetItem.manualUnlock = cachedUnlock.data || null;
+        targetItem.manualUnlockMessage = cachedUnlock.message || "已从缓存读取";
+        targetItem.manualUnlockError = "";
+        renderSmartPanFilter([...(snapshot.unlockedResources || []), ...(snapshot.paidResources || [])]);
+        rerenderSmartResourceLists();
+        updateSmartExportButtonState();
+        setSmartResourceTab("paid");
+        dom.smartSelectionMeta.textContent = "收费资源已从缓存读取解锁结果。";
+        return;
+      }
+
+      setPending(button, true);
+      try {
+        dom.smartSelectionMeta.textContent = "正在手动解锁收费资源...";
+        const unlocked = await fetchJSON("/api/open/resources/unlock", {
+          method: "POST",
+          body: {
+            slug,
+            allow_points: true
+          }
+        });
+        targetItem.manualUnlock = unlocked.data || null;
+        targetItem.manualUnlockMessage = unlocked.message || "手动解锁成功";
+        targetItem.manualUnlockError = "";
+        persistCachedUnlockResult(slug, {
+          data: unlocked.data || null,
+          message: unlocked.message || "手动解锁成功"
+        });
+        renderSmartPanFilter([...(snapshot.unlockedResources || []), ...(snapshot.paidResources || [])]);
+        rerenderSmartResourceLists();
+        updateSmartExportButtonState();
+        setSmartResourceTab("paid");
+        dom.smartSelectionMeta.textContent = "收费资源已手动解锁，仍保留在收费资源列表中。";
+      } catch (error) {
+        targetItem.manualUnlock = null;
+        targetItem.manualUnlockMessage = "";
+        targetItem.manualUnlockError = error.message || String(error);
+        renderSmartPanFilter([...(snapshot.unlockedResources || []), ...(snapshot.paidResources || [])]);
+        rerenderSmartResourceLists();
+        updateSmartExportButtonState();
+        dom.smartSelectionMeta.textContent = `手动解锁失败：${error.message || String(error)}`;
+      } finally {
+        setPending(button, false);
+      }
+    }
+
+    function getSmartMediaKey(media) {
+      return `${media.media_type || "unknown"}:${media.id || ""}`;
+    }
+
+    function buildSmartFinalSelectionMessage(summary, visiblePaid) {
+      if (!summary || !summary.total) {
+        return "该条目当前没有可用资源。";
+      }
+      const paidMessage = summary.paid > 0
+        ? visiblePaid
+          ? `收费资源 ${summary.paid} 个已显示在下方，可逐个手动解锁。`
+          : `收费资源 ${summary.paid} 个当前已隐藏。`
+        : "当前没有收费资源。";
+      const invalidMessage = summary.skippedInvalid > 0
+        ? `已忽略 ${summary.skippedInvalid} 个失效链接。`
+        : "";
+      return `共 ${summary.total} 个有效资源，已自动处理 ${summary.free} 个可直接获取的链接。${invalidMessage}${paidMessage}`;
+    }
+
+    async function fetchJSON(path, options = {}) {
+      const method = options.method || "GET";
+      const headers = {
+        ...buildHeaders(),
+        ...(options.headers || {})
+      };
+      const requestInit = {
+        method,
+        headers
+      };
+      if (options.body !== undefined) {
+        requestInit.body = JSON.stringify(options.body);
+        requestInit.headers["Content-Type"] = "application/json";
+      }
+
+      const response = await fetch(`${getServerBaseURL()}${path}`, requestInit);
+      const text = await response.text();
+      const payload = safeParseJSON(text);
+      if (!response.ok) {
+        const message = payload && payload.message ? payload.message : `${response.status} ${response.statusText}`;
+        throw new Error(message);
+      }
+      return payload !== null ? payload : {};
+    }
+
+    async function mapWithConcurrency(items, limit, mapper, onProgress) {
+      if (!Array.isArray(items) || items.length === 0) {
+        return [];
+      }
+      const results = new Array(items.length);
+      let cursor = 0;
+      let completed = 0;
+
+      async function worker() {
+        while (cursor < items.length) {
+          const index = cursor++;
+          results[index] = await mapper(items[index], index);
+          completed += 1;
+          if (typeof onProgress === "function") {
+            onProgress(results[index], index, completed);
+          }
+        }
+      }
+
+      const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker());
+      await Promise.all(workers);
+      return results;
+    }
+
+    function getPosterURL(posterPath) {
+      if (!posterPath) return "";
+      return `${TMDB_POSTER_BASE_URL}${posterPath}`;
+    }
+
+    function getSmartMediaTitle(item) {
+      return item.title || item.name || item.original_title || item.original_name || "未命名条目";
+    }
+
+    function getSmartMediaYear(item) {
+      const date = item.release_date || item.first_air_date || "";
+      return date ? String(date).slice(0, 4) : "";
+    }
+
+    function safeParseJSON(text) {
+      try {
+        return JSON.parse(text);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function loadTMDBLanguages() {
+      try {
+        const headers = buildHeaders();
+        const baseURL = getServerBaseURL();
+        const response = await fetch(`${baseURL}/api/tmdb/configuration/primary_translations`, {
+          method: "GET",
+          headers
+        });
+        if (!response.ok) {
+          return;
+        }
+        const translations = await response.json();
+        if (!Array.isArray(translations)) {
+          return;
+        }
+        const filtered = translations
+          .filter((item) => typeof item === "string" && item.includes("-"))
+          .sort((a, b) => a.localeCompare(b));
+        if (filtered.length === 0) {
+          return;
+        }
+        applyLanguageOptions(filtered, dom.tmdbSearchLanguage.value || "zh-CN");
+      } catch (_) {
+      }
+    }
+
+    function applyLanguageOptions(options, preferredValue) {
+      const uniqueOptions = Array.from(new Set(options));
+      populateLanguageSelect(dom.smartSearchLanguage, uniqueOptions, preferredValue || "zh-CN");
+      populateLanguageSelect(dom.tmdbSearchLanguage, uniqueOptions, preferredValue || "zh-CN");
+      populateLanguageSelect(dom.tmdbDetailsLanguage, uniqueOptions, preferredValue || "zh-CN");
+    }
+
+    function populateLanguageSelect(select, options, preferredValue) {
+      if (!select) return;
+      const currentValue = select.value || preferredValue || "zh-CN";
+      select.innerHTML = "";
+      options.forEach((option) => {
+        const node = document.createElement("option");
+        node.value = option;
+        node.textContent = option;
+        select.appendChild(node);
+      });
+      if (!options.includes(currentValue)) {
+        const extra = document.createElement("option");
+        extra.value = currentValue;
+        extra.textContent = currentValue;
+        select.appendChild(extra);
+      }
+      select.value = currentValue;
+    }
+
+    function setTemporaryStatus(text, kind) {
+      dom.statusChip.textContent = text;
+      dom.statusChip.className = `status-chip ${kind || ""}`.trim();
+      setTimeout(() => {
+        if (dom.statusChip.textContent === text) {
+          dom.statusChip.textContent = "等待操作";
+          dom.statusChip.className = "status-chip";
+        }
+      }, 1800);
+    }
+
+    function setPending(button, pending) {
+      if (!button) return;
+      if (pending) {
+        state.pendingButton = button;
+        button.dataset.originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = "请求中...";
+        button.classList.add("is-loading");
+      } else {
+        button.disabled = false;
+        button.textContent = button.dataset.originalText || "提交";
+        button.classList.remove("is-loading");
+        delete button.dataset.originalText;
+        if (state.pendingButton === button) {
+          state.pendingButton = null;
+        }
+      }
+    }
+
+    function buildHeaders() {
+      const key = dom.apiKey.value.trim();
+      const tmdbKey = dom.tmdbAPIKey.value.trim();
+      const headers = {};
+      if (key) {
+        headers["X-API-Key"] = key;
+      }
+      if (tmdbKey) {
+        headers["X-TMDB-API-Key"] = tmdbKey;
+      }
+      return headers;
+    }
+
+    function buildActionConfig(action) {
+      switch (action) {
+        case "healthz":
+          return { method: "GET", path: "/healthz", body: null };
+        case "ping":
+          return { method: "GET", path: "/api/open/ping", body: null };
+        case "quota":
+          return { method: "GET", path: "/api/open/quota", body: null };
+        case "usage": {
+          const query = new URLSearchParams();
+          const start = document.getElementById("usage-start").value.trim();
+          const end = document.getElementById("usage-end").value.trim();
+          if (start) query.set("start_date", start);
+          if (end) query.set("end_date", end);
+          return { method: "GET", path: `/api/open/usage${query.toString() ? `?${query.toString()}` : ""}`, body: null };
+        }
+        case "usage-today":
+          return { method: "GET", path: "/api/open/usage/today", body: null };
+        case "resources": {
+          const type = document.getElementById("resources-type").value;
+          const tmdbId = document.getElementById("resources-tmdb-id").value.trim();
+          if (!tmdbId) throw new Error("tmdb_id 不能为空");
+          return { method: "GET", path: `/api/open/resources/${encodeURIComponent(type)}/${encodeURIComponent(tmdbId)}`, body: null };
+        }
+        case "unlock": {
+          const slug = document.getElementById("unlock-slug").value.trim();
+          if (!slug) throw new Error("slug 不能为空");
+          return {
+            method: "POST",
+            path: "/api/open/resources/unlock",
+            body: {
+              slug,
+              allow_points: document.getElementById("unlock-allow-points").checked
+            }
+          };
+        }
+        case "tmdb-search": {
+          const mediaType = document.getElementById("tmdb-search-type").value;
+          const queryValue = document.getElementById("tmdb-search-query").value.trim();
+          const page = document.getElementById("tmdb-search-page").value.trim();
+          const language = document.getElementById("tmdb-search-language").value.trim();
+          if (!queryValue) throw new Error("TMDB query 不能为空");
+          const query = new URLSearchParams();
+          query.set("query", queryValue);
+          if (page) query.set("page", page);
+          if (language) query.set("language", language);
+          return { method: "GET", path: `/api/tmdb/search/${encodeURIComponent(mediaType)}?${query.toString()}`, body: null };
+        }
+        case "tmdb-details": {
+          const mediaType = document.getElementById("tmdb-details-type").value;
+          const mediaID = document.getElementById("tmdb-details-id").value.trim();
+          const language = document.getElementById("tmdb-details-language").value.trim();
+          const appendToResponse = document.getElementById("tmdb-details-append").value.trim();
+          if (!mediaID) throw new Error("media_id 不能为空");
+          const query = new URLSearchParams();
+          if (language) query.set("language", language);
+          if (appendToResponse) query.set("append_to_response", appendToResponse);
+          return { method: "GET", path: `/api/tmdb/${encodeURIComponent(mediaType)}/${encodeURIComponent(mediaID)}${query.toString() ? `?${query.toString()}` : ""}`, body: null };
+        }
+        case "tmdb-configuration":
+          return { method: "GET", path: "/api/tmdb/configuration", body: null };
+        case "tmdb-primary-translations":
+          return { method: "GET", path: "/api/tmdb/configuration/primary_translations", body: null };
+        case "check-resource": {
+          const url = document.getElementById("check-resource-url").value.trim();
+          if (!url) throw new Error("url 不能为空");
+          return { method: "POST", path: "/api/open/check/resource", body: { url } };
+        }
+        case "shares-list": {
+          const query = new URLSearchParams();
+          const page = document.getElementById("shares-page").value.trim();
+          const pageSize = document.getElementById("shares-page-size").value.trim();
+          if (page) query.set("page", page);
+          if (pageSize) query.set("page_size", pageSize);
+          return { method: "GET", path: `/api/open/shares${query.toString() ? `?${query.toString()}` : ""}`, body: null };
+        }
+        case "share-detail": {
+          const slug = document.getElementById("share-slug").value.trim();
+          if (!slug) throw new Error("slug 不能为空");
+          return { method: "GET", path: `/api/open/shares/${encodeURIComponent(slug)}`, body: null };
+        }
+        case "share-delete": {
+          const slug = document.getElementById("share-slug").value.trim();
+          if (!slug) throw new Error("slug 不能为空");
+          return { method: "DELETE", path: `/api/open/shares/${encodeURIComponent(slug)}`, body: null };
+        }
+        case "share-create":
+          return { method: "POST", path: "/api/open/shares", body: parseJSONField("create-share-body") };
+        case "share-update": {
+          const slug = document.getElementById("update-share-slug").value.trim();
+          if (!slug) throw new Error("slug 不能为空");
+          return { method: "PATCH", path: `/api/open/shares/${encodeURIComponent(slug)}`, body: parseJSONField("update-share-body") };
+        }
+        default:
+          throw new Error(`未识别的动作: ${action}`);
+      }
+    }
+
+    function parseJSONField(id) {
+      const raw = document.getElementById(id).value.trim();
+      if (!raw) throw new Error("JSON 请求体不能为空");
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        throw new Error(`${id} 里的 JSON 格式无效`);
+      }
+    }
+
+    async function callAction(action, button) {
+      try {
+        const config = buildActionConfig(action);
+        await executeRequest(config, button);
+      } catch (error) {
+        showClientError(error);
+      }
+    }
+
+    async function executeRequest(config, button) {
+      setPending(button, true);
+
+      const headers = buildHeaders();
+      const baseURL = getServerBaseURL();
+      const requestURL = `${baseURL}${config.path}`;
+      let bodyText = "";
+      if (config.body !== null && config.body !== undefined) {
+        bodyText = JSON.stringify(config.body, null, 2);
+        headers["Content-Type"] = "application/json";
+      }
+
+      state.lastCurl = buildCurl(config.method, requestURL, headers, bodyText);
+      updateRequestSummary(config.method, config.path, requestURL, headers, bodyText);
+      setStatusPending(config.method, config.path);
+
+      try {
+        const startedAt = performance.now();
+        const response = await fetch(requestURL, {
+          method: config.method,
+          headers,
+          body: bodyText || undefined
+        });
+
+        const text = await response.text();
+        const durationMs = Math.round(performance.now() - startedAt);
+        state.lastResponseText = text;
+        renderResponse(response, text, config.method, config.path, durationMs);
+      } catch (error) {
+        showClientError(error);
+      } finally {
+        setPending(button, false);
+      }
+    }
+
+    function renderResponse(response, text, method, path, durationMs) {
+      const ok = response.ok;
+      dom.statusChip.textContent = `${response.status} ${response.statusText}`;
+      dom.statusChip.className = `status-chip ${ok ? "success" : "error"}`.trim();
+      dom.methodChip.textContent = method;
+      dom.pathChip.textContent = path;
+
+      const headerKeys = [
+        "content-type",
+        "x-ratelimit-reset",
+        "x-endpoint-limit",
+        "x-endpoint-remaining",
+        "retry-after"
+      ];
+
+      const headers = {};
+      headerKeys.forEach((key) => {
+        const value = response.headers.get(key);
+        if (value !== null) headers[key] = value;
+      });
+      renderHeaders(headers);
+      renderInsights(text, headers, durationMs);
+      dom.responseBody.textContent = formatAsJSONIfPossible(text);
+    }
+
+    function renderInsights(text, headers, durationMs) {
+      let parsed = null;
+      try {
+        parsed = JSON.parse(text);
+      } catch (_) {
+        parsed = null;
+      }
+
+      const success = parsed && Object.prototype.hasOwnProperty.call(parsed, "success")
+        ? `${String(parsed.success)}${parsed.code ? ` / ${parsed.code}` : ""}`
+        : "-";
+      const message = parsed && parsed.message ? String(parsed.message) : "无 message";
+      const dataSummary = summarizeData(parsed ? parsed.data : null);
+      const quotaParts = [];
+
+      const remaining = headers["x-endpoint-remaining"];
+      const limit = headers["x-endpoint-limit"];
+      const reset = headers["x-ratelimit-reset"];
+      if (remaining || limit) {
+        quotaParts.push(`remaining ${remaining || "-"} / limit ${limit || "-"}`);
+      }
+      if (reset) {
+        quotaParts.push(`reset ${reset}`);
+      }
+      if (durationMs !== undefined && durationMs !== null) {
+        quotaParts.push(`${durationMs} ms`);
+      }
+
+      dom.insightSuccess.textContent = success;
+      dom.insightMessage.textContent = message;
+      dom.insightData.textContent = dataSummary;
+      dom.insightQuota.textContent = quotaParts.length ? quotaParts.join("\n") : `${durationMs || 0} ms`;
+    }
+
+    function summarizeData(data) {
+      if (data === null || data === undefined) {
+        return "null";
+      }
+      if (Array.isArray(data)) {
+        return `array(${data.length})`;
+      }
+      if (typeof data === "object") {
+        if (Array.isArray(data.results)) {
+          return `results(${data.results.length})`;
+        }
+        if (Array.isArray(data.items)) {
+          return `items(${data.items.length})`;
+        }
+        if (Array.isArray(data.data)) {
+          return `data(${data.data.length})`;
+        }
+        const keys = Object.keys(data);
+        return keys.length ? keys.slice(0, 6).join(", ") : "object(0)";
+      }
+      return String(data);
+    }
+
+    function renderHeaders(headers) {
+      const entries = Object.entries(headers);
+      if (entries.length === 0) {
+        dom.headersList.innerHTML = '<div class="hint">暂无关键响应头</div>';
+        return;
+      }
+      dom.headersList.innerHTML = entries.map(([key, value]) => {
+        return `<div class="header-item"><div class="header-key">${escapeHTML(key)}</div><div class="header-value">${escapeHTML(value)}</div></div>`;
+      }).join("");
+    }
+
+    function updateRequestSummary(method, path, requestURL, headers, bodyText) {
+      const summary = {
+        base_url: getServerBaseURL(),
+        method,
+        path,
+        request_url: requestURL,
+        headers,
+        body: bodyText ? JSON.parse(bodyText) : null
+      };
+      dom.requestSummary.textContent = JSON.stringify(summary, null, 2);
+    }
+
+    function setStatusPending(method, path) {
+      dom.statusChip.textContent = "请求中...";
+      dom.statusChip.className = "status-chip pending";
+      dom.methodChip.textContent = method;
+      dom.pathChip.textContent = path;
+      dom.insightSuccess.textContent = "...";
+      dom.insightMessage.textContent = "请求发送中";
+      dom.insightData.textContent = "等待响应";
+      dom.insightQuota.textContent = "-";
+      dom.headersList.innerHTML = '<div class="hint">等待响应头...</div>';
+      dom.responseBody.textContent = "等待响应...";
+    }
+
+    function showClientError(error) {
+      const message = error && error.message ? error.message : String(error);
+      dom.statusChip.textContent = "客户端错误";
+      dom.statusChip.className = "status-chip error";
+      dom.methodChip.textContent = "-";
+      dom.pathChip.textContent = "-";
+      dom.insightSuccess.textContent = "false / CLIENT_ERROR";
+      dom.insightMessage.textContent = message;
+      dom.insightData.textContent = "-";
+      dom.insightQuota.textContent = "-";
+      dom.headersList.innerHTML = '<div class="hint">请求未发出或本地校验失败</div>';
+      dom.responseBody.textContent = formatAsJSONIfPossible(JSON.stringify({
+        success: false,
+        code: "CLIENT_ERROR",
+        message
+      }));
+    }
+
+    function buildCurl(method, requestURL, headers, bodyText) {
+      const parts = [`curl -X ${method}`];
+      Object.entries(headers).forEach(([key, value]) => {
+        parts.push(`-H ${JSON.stringify(`${key}: ${value}`)}`);
+      });
+      if (bodyText) {
+        parts.push(`-d ${JSON.stringify(bodyText)}`);
+      }
+      parts.push(JSON.stringify(requestURL));
+      return parts.join(" \\\n  ");
+    }
+
+    function clearResponse() {
+      state.lastResponseText = "";
+      state.lastCurl = "";
+      dom.statusChip.textContent = "等待操作";
+      dom.statusChip.className = "status-chip";
+      dom.methodChip.textContent = "-";
+      dom.pathChip.textContent = "-";
+      dom.insightSuccess.textContent = "-";
+      dom.insightMessage.textContent = "等待请求";
+      dom.insightData.textContent = "-";
+      dom.insightQuota.textContent = "-";
+      dom.requestSummary.textContent = "暂无请求";
+      dom.headersList.innerHTML = '<div class="hint">暂无响应头</div>';
+      dom.responseBody.textContent = "等待请求...";
+    }
+
+    async function copyLastJSON() {
+      if (!state.lastResponseText) {
+        setTemporaryStatus("暂无 JSON 可复制", "error");
+        return;
+      }
+      await copyText(formatAsJSONIfPossible(state.lastResponseText), "JSON 已复制");
+    }
+
+    async function copyLastCurl() {
+      if (!state.lastCurl) {
+        setTemporaryStatus("暂无 cURL 可复制", "error");
+        return;
+      }
+      await copyText(state.lastCurl, "cURL 已复制");
+    }
+
+    async function copyText(text, successMessage, options = {}) {
+      const { silentStatus = false } = options;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          fallbackCopy(text);
+        }
+        if (!silentStatus && successMessage) {
+          setTemporaryStatus(successMessage, "success");
+        }
+      } catch (_) {
+        try {
+          fallbackCopy(text);
+          if (!silentStatus && successMessage) {
+            setTemporaryStatus(successMessage, "success");
+          }
+        } catch (error) {
+          if (!silentStatus) {
+            setTemporaryStatus("复制失败", "error");
+          }
+          throw error;
+        }
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "readonly");
+      textarea.style.position = "fixed";
+      textarea.style.top = "-1000px";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+
+    function formatAsJSONIfPossible(text) {
+      try {
+        return JSON.stringify(JSON.parse(text), null, 2);
+      } catch (_) {
+        return text || "";
+      }
+    }
+
+    function escapeHTML(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    init();
+  </script>
+</body>
+</html>
